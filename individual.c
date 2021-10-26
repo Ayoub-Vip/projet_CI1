@@ -7,7 +7,9 @@
 Individual *individualCreate(int length, int nbVal) {
 
 	Individual * newIndividual = malloc(length*sizeof(int));
-	
+
+	for (int i = 0; i < length; ++i)
+	    newIndividual[i] = rand()%nbVal;
 
 }
 
