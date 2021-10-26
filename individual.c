@@ -6,7 +6,7 @@
 
 Individual *individualCreate(int length, int nbVal) {
 
-	Individual * newIndividual = malloc(sizeof(Individual));
+	Individual * newIndividual = malloc(length*sizeof(int));
 	
 
 }
