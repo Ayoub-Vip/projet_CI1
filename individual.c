@@ -9,13 +9,13 @@ Individual *individualCreate(int length, int nbVal) {
 	Individual * newIndividual = malloc(length*sizeof(int));
 
 	for (int i = 0; i < length; ++i)
-	    newIndividual[i] = rand()%nbVal;
+	    newIndividual->tab[i] = rand()%nbVal;
 
 }
 
 
 void individualFree(Individual *ind) {
-
+	free(ind);
 	
 }
 
