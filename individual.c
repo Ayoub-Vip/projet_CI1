@@ -40,12 +40,6 @@ int individualGetLength(Individual *ind) {
 }
 
 
-int individualGetGene(Individual *ind, int i) {
-	return ind->genoType;
-	
-}
-
-
 int individualGetGene(Individual *ind, int i){
 	return ind->genoType[i];
 
