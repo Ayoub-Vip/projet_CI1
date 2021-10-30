@@ -58,8 +58,8 @@ Population *populationInit(int length, int nbVal, int size,
 
 	for (int i = 0; i < populationInit->size; ++i)
 		if(populationInit->tableInd[i] = individualCreate(length, nbVal))
-			init(populationInit->tableInd[i]);	
-
+			init(populationInit->tableInd[i]);
+		    (populationInit->tableInd[i])->quality = pop->fitness(pop->tableInd[i], pop->paramFitness);
 
 
 }
@@ -127,7 +127,7 @@ void populationFree(Population *pop) {
 
 	for (int i = 0; i < pop->size; ++i)
 		free(pop->tableInd[i]);
-	
+
 	free(pop->tableInd);
 	free(pop);
 
@@ -137,6 +137,10 @@ void populationFree(Population *pop) {
 
 Individual *populationSelection(Population *pop) {
 
+	for (int i = 0; i < count; ++i)
+	{
+		/* code */
+	}
 
 }
 
