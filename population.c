@@ -20,19 +20,19 @@ struct Population_t {
 	int length;
 	int nbVal;
 	int size;
-        int eliteSize
+        int eliteSize;
 	int **genoTypes;
 	float pmutation;
-	double (*fitness)(Individual *, void *);
-	void *paramFitness;
-	void (*init)(Individual *);
-	void (*mutation)(Individual *, float);
-	Individual* (*crossover)(Individual *, Individual *);
+        double (*fitness)(Individual *, void *);
+        void *paramFitness;
+        void (*init)(Individual *);
+        void (*mutation)(Individual *, float);
+        Individual* (*crossover)(Individual *, Individual *);
 
 };
 Population *populationInit(int length, int nbVal, int size,
                            double (*fitness)(Individual *, void *),
-			               void *paramFitness,
+			   void *paramFitness,
                            void (*init)(Individual *),
                            void (*mutation)(Individual *, float), float pmutation,
                            Individual* (*crossover)(Individual *, Individual *),
