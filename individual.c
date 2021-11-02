@@ -66,7 +66,7 @@ void individualRandomInit(Individual *ind) {
 
 
 void individualRandomPermInit(Individual *ind) {
-///:il est just demander de faire une seule permutaion
+///:il est just demande de faire une seule permutaion
 	int p = rand()%nbVal;
 	int q = rand()%nbVal;
         int tmp = ind->genoType[p];
@@ -75,9 +75,6 @@ void individualRandomPermInit(Individual *ind) {
         ind->genoType[q] = tmp;
 
 
-
-}
-		
 
 }
 
