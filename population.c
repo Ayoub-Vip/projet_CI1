@@ -22,6 +22,7 @@ struct Population_t {
 	int size;
     int eliteSize;
 	float pmutation;
+	double sumFitness;
     double (*fitness)(Individual *, void *);
     void *paramFitness;
     void (*init)(Individual *);
@@ -55,11 +56,20 @@ Population *populationInit(int length, int nbVal, int size,
 	populationInit->init = init;
 	populationInit->mutation = mutation;
 	populationInit->crossover = crossover;
+	populationInit->sumFitness = 0;
 
 	for (int i = 0; i < populationInit->size; ++i)
 		if(populationInit->tableInd[i] = individualCreate(length, nbVal))
-			init(populationInit->tableInd[i]);
-		    (populationInit->tableInd[i])->quality = pop->fitness(pop->tableInd[i], pop->paramFitness);
+			{ 
+
+				init(populationInit->tableInd[i]);
+				(populationInit->tableInd[i])->quality = pop->fitness(pop->tableInd[i], pop->paramFitness);
+				populationInit->sumFitness += (populationInit->tableInd[i])->quality;
+				(populationInit->tableInd[i])->qualityCumulation = populationInit->sumFitness;
+
+
+
+			}
 
 
 }
@@ -112,7 +122,7 @@ double populationGetAvgFitness(Population *pop) {
 
 
 Individual *populationGetBestIndividual(Population *pop) {
-	double maxFitness = populationGetAvgFitness(pop)
+	double maxFitness = populationGetAvgFitness(pop);
 
 	for (int i = 0; i < pop->size; ++i)
 	{
@@ -134,13 +144,49 @@ void populationFree(Population *pop) {
 }
 
 
+//O(logn)
 
 Individual *populationSelection(Population *pop) {
 
-	for (int i = 0; i < count; ++i)
-	{
-		/* code */
+	r = (double) rand()/(double) RAND_MAX;
+
+	double sum = 0;
+	int lo = 0;
+	int hi = pop->size-1;
+	
+	while ( lo < hi){
+		int mid = lo + (hi - lo) / 2;
+		if (r < (pop->tableInd[mid])->qualityCumulation)
+		
+			if (r > (pop->tableInd[mid-1])->qualityCumulation)
+				return (pop->tableInd[mid-1]);
+			else
+				hi = mid - 1;
+		
+		else if (r > (pop->tableInd[mid])->qualityCumulation)
+
+			if (r < (pop->tableInd[mid+1])->qualityCumulation)
+				return (pop->tableInd[mid+1]);
+			else
+				lo = mid + 1;
+
+		else
+			return (pop->tableInd[mid]);
+
 	}
+/*int binary_search_aux(int key, int tab[], int lo, int hi) {
+int lo = 0;
+int hi = n-1;
+  while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+    if (key < tab[mid])
+      hi = mid - 1;
+    else if (key > tab[mid])
+      lo = mid + 1;
+    else
+      return mid;
+}}*/
+
 
 }
 
