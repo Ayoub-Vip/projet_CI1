@@ -58,7 +58,7 @@ void individualRandomInit(Individual *ind) {
 
 	for (int i = 0; i < ind->length; i++)
 	{
-		genotype[i] = rand()%2;
+		genoType[i] = rand()%2;
 	}
 	
 	ind->genoType = genotype;		
