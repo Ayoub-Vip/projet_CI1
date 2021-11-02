@@ -9,7 +9,8 @@ struct Individual_t {
 	int length;
 	int nbVal;
 	int *genoType;
-	// double quality;
+	double quality;
+	double qualityCumulation;
 };
 
 
