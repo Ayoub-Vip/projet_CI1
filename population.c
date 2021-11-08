@@ -159,7 +159,7 @@ Individual *populationSelection(Population *pop) {
 		if (r < (pop->tableInd[mid])->qualityCumulation)
 		
 			if (r > (pop->tableInd[mid-1])->qualityCumulation)
-				return (pop->tableInd[mid-1]);
+				return (pop->tableInd[mid]);
 			else
 				hi = mid - 1;
 		
