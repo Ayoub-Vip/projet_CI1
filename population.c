@@ -193,6 +193,68 @@ int hi = n-1;
 
 
 void populationEvolve(Population *pop) {
+	
+		
+	int eliteSize = pop->eliteSize;
+	int size = pop->size;
+	individual** tableInd = pop->tableInd;
+	void* paramFitness = pop->paramFitness;
+	double* fitness = pop->fitness;
+	
+	double table_fitness[size];
+	int table_indice[size];
+	int elite_individus[eliteSize-1];
+	int k = 0;
+	
+	for (int i = 0; i < size; i++)
+	{
+		table_fitness[i] = fitness( tableInd[i], paramFitness);
+		table_indice[i] = i;
+	}
+	
+	mergesort(table_fitness, size);
+	int size_indicetab = size;
+	
+	for( int i = 0; i<size_indicetab && k<eliteSize-1; i++)
+	{
+		double a = fitness( tableInd[table_indice[i]], paramFitness);
+		
+		if( a>=table_fitness[size - eliteSize] && a<=table_fitness[size-2])
+		{
+			elite_individus[k] = table_indice[i];
+			k++;
+		}
+		
+		int indice = table_indice[i];
+		table_indice[i] = table_indice[size_indicetab-1];
+		table_indice[size_indicetab-1] = indice;
+		
+		size_indicetab--;
+	}
+	
+	population* pop_t = populationInit();
+	
+	pop_t->tableInd[0] = populationGetBestIndividual();
+	
+	for(int i = 0; i<=k; i++)
+	{
+		pop_t->tableInd[i+1] = pop->tableInd[elite_individus[i]];
+	}
+	
+	for(int i = k+1; i<size; i++)
+	{
+		individual* parent1 = populationSelection(pop);
+		individual* parent2 = populationSelection(pop); /* faudrait vérifier que les parents sont différents*/
+		
+		pop_t->tableInd[i] = individualSeqCrossOver(parent1, parent2);
+	}
+	
+	for( int i = 1; i<size; i++)
+	{
+		individualSeqMutation(pop_t->tableInd[i], pop->pmutation);
+	}
+	
+	pop = pop_t;
 
 
 }
