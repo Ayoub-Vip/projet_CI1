@@ -20,15 +20,15 @@ struct Population_t {
 	int length;
 	int nbVal;
 	int size;
-    int eliteSize;
+	int eliteSize;
 	float pmutation;
 	double sumFitness;
-    double (*fitness)(Individual *, void *);
-    void *paramFitness;
-    void (*init)(Individual *);
-    void (*mutation)(Individual *, float);
+	double (*fitness)(Individual *, void *);
+	void *paramFitness;
+	void (*init)(Individual *);
+	void (*mutation)(Individual *, float);
 	Individual** tableInd;
-    Individual* (*crossover)(Individual *, Individual *);
+	Individual* (*crossover)(Individual *, Individual *);
 
 };
 
@@ -37,7 +37,7 @@ struct Population_t {
 
 Population *populationInit(int length, int nbVal, int size,
                            double (*fitness)(Individual *, void *),
-			               void *paramFitness,
+                           void *paramFitness,
                            void (*init)(Individual *),
                            void (*mutation)(Individual *, float), float pmutation,
                            Individual* (*crossover)(Individual *, Individual *),
@@ -50,7 +50,7 @@ Population *populationInit(int length, int nbVal, int size,
 	populationInit->length = length;
 	populationInit->nbVal = nbVal;
 	populationInit->size = size;
-	populationInit->paramFitness  = paramFitness;
+	populationInit->paramFitness  = paramFitness;	
 	populationInit->eliteSize = eliteSize;
 	populationInit->pmutation = pmutation;
 	populationInit->init = init;
@@ -92,9 +92,9 @@ double populationGetMaxFitness(Population *pop) {
 
 
 double populationGetMinFitness(Population *pop) {
-	double min;
+	double min = pop->fitness(pop->tableInd[0], pop->paramFitness);
 
-	for (int i = 0; i < pop->size-1; ++i)
+	for (int i = 1; i < pop->size-1; ++i)
 	{
 		double a =pop->fitness(pop->tableInd[i], pop->paramFitness);
 		double b =pop->fitness(pop->tableInd[i+1], pop->paramFitness);
@@ -122,7 +122,7 @@ double populationGetAvgFitness(Population *pop) {
 
 
 Individual *populationGetBestIndividual(Population *pop) {
-	double maxFitness = populationGetAvgFitness(pop);
+	double maxFitness = populationGetMaxFitness(pop);
 
 	for (int i = 0; i < pop->size; ++i)
 	{
@@ -255,6 +255,7 @@ void populationEvolve(Population *pop) {
 	}
 	
 	pop = pop_t;
+
 
 
 }
