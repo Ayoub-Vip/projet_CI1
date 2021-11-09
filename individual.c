@@ -53,15 +53,8 @@ void individualSetGene(Individual *ind, int i, int val) {
 
 
 void individualRandomInit(Individual *ind) {
-
-	genoType* genotype = ind->genoType;
-
-	for (int i = 0; i < ind->length; i++)
-	{
-		genoType[i] = rand()%ind->nbVal;
-	}
-	
-	ind->genoType = genotype;		
+	for (int i = 0; i < ind->length; ++i)
+		ind->genoType[i] = rand()%ind->nbVal;		
 }
 
 
@@ -98,7 +91,7 @@ Individual *individualCopy(Individual *ind) {
 }
 
 
-
+//!!!!fprintf
 void individualPrint(FILE *fp, Individual *ind) {
 
 
@@ -112,22 +105,9 @@ void individualPrint(FILE *fp, Individual *ind) {
 
 
 void individualSeqMutation(Individual *ind, float pm) {
-	
-		genoType* genotype = ind->genoType;
-	int length = ind->length;
-	
-	for(;;;)
-	{
-		int p = rand()%length;
-		int q = rand()%length;
-		
-		if( p!=q)
-			break;
-	}
-	
-	int a = genotype[p];
-	genotype[p] = genotype[q];
-	genotype[q] = a;
+	if (( (double)rand()/(double)RAND_MAX ) <= pm)
+		individualRandomPermInit(Individual *ind);
+
 	
 }
 
