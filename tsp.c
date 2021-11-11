@@ -139,6 +139,19 @@ void tspTourToGIF(int *tour, Map *map, const char *filename, int size) {
 
 double tspGetTourLength(int *tour, Map *map) {
 	// Implementation
+	
+	double tourLength;
+	int i = 0;
+
+	for (; i < map->nbTowns; ++i)  {
+
+		int villeNum = tour[i];
+		tourLength += sqrt(pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2));
+	}
+
+	tourLength += sqrt(pow(map->x[tour[i]] - map->x[tour[0]]) + pow(map->y[tour[i]] - map->y[tour[0]]));
+
+	return tourLength;
 
 	return 0.0;
 }
