@@ -191,11 +191,12 @@ int hi = n-1;
 
 void populationEvolve(Population *pop) {
 	
+	
 	int eliteSize = pop->eliteSize;
 	int size = pop->size;
 	individual** tableInd = pop->tableInd;
 	void* paramFitness = pop->paramFitness;
-	double* fitness = pop->fitness;
+	double (* fitness) = pop->fitness;
 	
 	double table_fitness[size];
 	int elite_individus[eliteSize-1];
@@ -211,16 +212,18 @@ void populationEvolve(Population *pop) {
 	for( int i = 0; i<size && k<eliteSize-1; i++)
 	{
 		
-		if( tableInd[i]->quality >=table_fitness[size - eliteSize] && tableInd[i]->quality <= table_fitness[size-2])
+		if( tableInd[i]->quality >=table_fitness[size - eliteSize] 
+			&& tableInd[i]->quality <= table_fitness[size-2])
 		{
 			elite_individus[k] = i;
 			k++;
 		}
 	}
 	
-	population* pop_t = populationInit(pop->length, pop->nbVal, size, fitness, paramFitness,pop->init,pop->mutation,pop->crossover,eliteSize);
+	Population* pop_t = populationInit(pop->length, pop->nbVal, size, fitness,
+	 paramFitness,pop->init,pop->mutation,pop->crossover, eliteSize);
 	
-	pop_t->tableInd[0] = populationGetBestIndividual();
+	pop_t->tableInd[0] = populationGetBestIndividual(pop);
 	
 	for(int i = 0; i<=k; i++)
 	{
@@ -239,7 +242,7 @@ void populationEvolve(Population *pop) {
 	{
 		individualSeqMutation(pop_t->tableInd[i], pop->pmutation);
 		pop_t->tableInd[i]->quality = fitness(pop_t->tableInd[i], paramFitness);
-		pop_t->sumFitness = pop_t->sumFitness + pop_t->tableInd[i]->quality;
+		pop_t->sumFitness += pop_t->tableInd[i]->quality;
 
 	}
 	
@@ -250,12 +253,11 @@ void populationEvolve(Population *pop) {
 		 pop_t->tableInd[i+1]->qualityCumulation = pop_t->tableInd[i]->qualityCumulation + ((pop_t->tableInd[i+1]->quality)/pop_t->sumFitness);
 	}
 	
-	population* p = pop;
+	Population* p = pop;
 	pop = pop_t;
 	
 	populationFree(p);
 		
  
-
 }
 
