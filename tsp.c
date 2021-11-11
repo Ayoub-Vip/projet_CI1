@@ -156,8 +156,25 @@ double tspGetTourLength(int *tour, Map *map) {
 	return 0.0;
 }
 
-int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
-	// Implementation
+static double fitness( int* tour, Map* map) {
+	
+	return (double)1/tspGetTourLength( tour, map);
+}
 
-	return 0;
+int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
+	
+	double nbTowns = map->nbTowns;
+	
+	Population *pop = populationInit( nbTowns, nbTowns, sizePopulation, fitness, map,
+	                   individualRandomPermInit, individualPermMutation,pmutation, individualPermCrossOver, eliteSize);
+	
+	for( int i = 0; i<nbIterations; i++)
+	{
+		populationEvolve(pop);
+		
+		if(verbose == 1)
+			individualPrint( stderr, pop->tableInd[0] );	
+	}
+	
+	return pop->tableInd[0];
 }
