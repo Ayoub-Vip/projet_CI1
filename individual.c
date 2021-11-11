@@ -61,22 +61,33 @@ void individualRandomInit(Individual *ind) {
 
 
 void individualRandomPermInit(Individual *ind) {
-///:il est just demande de faire une seule permutaion
-	int p = rand()%ind->nbVal;
-	int q = rand()%ind->nbVal;
-        // int tmp = ind->genoType[p];
-        int tmp = individualGetGene(ind, p);
 
-        individualSetGene(ind,  p, individualGetGene(ind, q));
-        individualSetGene(ind,  q, tmp);
-
-
-
-        // ind->genoType[p] = ind->genoType[randval];
-        // ind->genoType[q] = tmp;
-
-
-
+	genoType* genotype = ind->genotype;
+	int length = ind->length;
+	int nbVal = ind->nbVal;
+	int i;
+	
+	for( i = 0; i<length; i++)
+	{
+		genotype[i] = i;
+	}
+	
+	for( i = 0; i<length, i++)
+	{
+		int p = rand()%nbVal;
+		int q = rand()%nbVal;
+		
+		if( p == q)
+			continue;
+		else
+		{
+			int a = genotype[p];
+			genotype[p] = genotype[q];
+			genotype[q] = a;
+		}
+	}
+	
+	ind->genoType = genotype;
 }
 
 
