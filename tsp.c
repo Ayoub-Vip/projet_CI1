@@ -4,12 +4,17 @@
 #include <math.h>
 
 #include "gifenc.h"
+// #include "population.c"
 #include "population.h"
 #include "individual.h"
 #include "tsp.h"
 
+// double fitness(Individual* ind, void* map);
+int *individualGetGenotype(Individual *ind);
 
-// Opaque structure of a map.
+// Individual *populationGetBestIndividual(Population *pop);
+
+// Opaque structure of a map. 
 struct Map_t {
 	int nbTowns;
 	double *x;
@@ -37,14 +42,14 @@ static void getField(char *inputstring, char *fields[3]) {
 Map *tspLoadMapFromFile(const char *filename, int nbTowns) {
 	FILE *fp = fopen(filename, "r");
 	if (fp == NULL)
-		terminate("loadMapFromFile: file can not be opened");
+		terminate("tspLoadMapFromFile: file can not be opened");
 
 	char line[1024];
 
 	Map *map = malloc(sizeof(Map));
 
-	if (map== NULL)
-		exit(EXIT_FAILURE);
+	if (map == NULL)
+	  terminate("tspLoadMapFromFile: map allocation failed");
 
 	map->nbTowns = nbTowns;
 	map->x = malloc(nbTowns * sizeof(double));
@@ -137,44 +142,49 @@ void tspTourToGIF(int *tour, Map *map, const char *filename, int size) {
   ge_close_gif(gif);  
 }
 
+
 double tspGetTourLength(int *tour, Map *map) {
-	// Implementation
-	
+
 	double tourLength;
 	int i = 0;
 
 	for (; i < map->nbTowns; ++i)  {
-
 		int villeNum = tour[i];
-		tourLength += sqrt(pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2));
+		tourLength += sqrt( pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2) );
 	}
 
-	tourLength += sqrt(pow(map->x[tour[i]] - map->x[tour[0]]) + pow(map->y[tour[i]] - map->y[tour[0]]));
+	tourLength += sqrt( pow(map->x[tour[i]] - map->x[tour[0]], 2) + pow(map->y[tour[i]] - map->y[tour[0]], 2) );
 
 	return tourLength;
-
-	return 0.0;
 }
 
-static double fitness( int* tour, Map* map) {
-	
-	return (double)1/tspGetTourLength( tour, map);
+
+
+static double fitness(Individual* ind, void* map) {
+
+	int *tour = individualGetGenotype(ind);
+
+	return (double)1/tspGetTourLength((int*) tour,(Map*) map);
 }
+
+
 
 int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
 	
-	double nbTowns = map->nbTowns;
+	int nbTowns = map->nbTowns;
 	
 	Population *pop = populationInit( nbTowns, nbTowns, sizePopulation, fitness, map,
-	                   individualRandomPermInit, individualPermMutation,pmutation, individualPermCrossOver, eliteSize);
+	                   individualRandomPermInit, individualPermMutation,pmutation,
+	                   individualPermCrossOver, eliteSize);
 	
-	for( int i = 0; i<nbIterations; i++)
+	for(int i = 0; i<nbIterations; i++)
 	{
 		populationEvolve(pop);
 		
-		if(verbose == 1)
-			individualPrint( stderr, pop->tableInd[0] );	
+		// if(verbose == 1){
+		// 			individualPrint(stderr, populationGetBestIndividual(pop));	
+		// 	}
 	}
 	
-	return pop->tableInd[0];
+	return individualGetGenotype(pop->tableInd[0]);
 }
