@@ -53,9 +53,13 @@ Population *populationInit(int length, int nbVal, int size,
 	popInit->length = length;
 	popInit->nbVal = nbVal;
 	popInit->size = size;
-	popInit->init = init;
 	popInit->sumFitness = 0;
 
+	if (init == NULL)
+		return popInit;
+
+
+	popInit->init = init;
 
 	Individual **ind = popInit->tableInd;
 	
@@ -196,7 +200,7 @@ static int compare ( const void *pa, const void *pb ) {
 	if(a[0] == b[0])
 		return (int) (a[1] - b[1]);
 	else
-		return (int) (a[0] - b[0]);
+		return (int) (b[0] - a[0]);
 
 	}
 
@@ -212,6 +216,7 @@ void populationEvolve(Population *pop) {
 	double (*fitness_t)(Individual *, void *) = pop->fitness;
 
 	double **table_fitness = malloc(size * sizeof(double*));
+
 	// fprintf(stderr, "populationInit inside population.C: size = %d, eliteSize=%d OK\n", size, eliteSize );
 	// fprintf(stderr, "fitness=%f OK\n", fitness_t(pop->tableInd[0], pop->paramFitness) );
 	
@@ -230,10 +235,10 @@ void populationEvolve(Population *pop) {
 
     }
 	// fprintf(stderr, "Inside population.C: boucle1 OK\n" );
-printf("\n");
-    for (int i = 0; i < size; ++i){
-        	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
-    }
+// printf("\n");
+//     for (int i = 0; i < size; ++i){
+//         	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
+//     }
    
 	// fprintf(stderr, "\nInside population.C: before qsort OK\n" );
 
@@ -241,11 +246,11 @@ printf("\n");
     qsort(table_fitness, size, sizeof table_fitness[0], compare);
 
 
-	fprintf(stderr, "\nInside population.C: qsort OK\n after sqort\n" );
-	for (int i = 0; i < size; ++i){
-        	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
-    }
-printf("\n");
+// 	fprintf(stderr, "\nInside population.C: qsort OK\n after sqort\n" );
+// 	for (int i = 0; i < size; ++i){
+//         	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
+//     }
+// printf("\n");
 
 	//conservation de k meilleur ind
 	for(int i = 0; i < eliteSize; i++)
@@ -255,6 +260,7 @@ printf("\n");
 		Individual *tmp  = pop->tableInd[i];
 		pop->tableInd[i] = pop->tableInd[indice];
 		pop->tableInd[indice] = tmp;
+		
 	}
 	// fprintf(stderr, "\nInside population.C:\nafter fisrt eliteSize\n" );
 
@@ -324,11 +330,6 @@ printf("\n");
 
 	free(table_fitness);
 	
-	// Population* p = pop;
-	// pop = pop;
-	
-	// populationFree(p);
-		
- 
+
 }
 
