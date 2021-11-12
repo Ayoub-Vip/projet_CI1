@@ -11,6 +11,8 @@
 
 // double fitness(Individual* ind, void* map);
 int *individualGetGenotype(Individual *ind);
+double individualGetQuality(Individual *ind);
+
 
 Individual *populationGetBestIndividual(Population *pop);
 
@@ -180,9 +182,15 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 	for(int i = 0; i<nbIterations; i++)
 	{
 		populationEvolve(pop);
+
+		individualPrint(stderr, populationGetBestIndividual(pop));
+		// individualPrint(stderr, populationGetBestIndividual(pop->tableInd[1]));
+		// individualPrint(stderr, populationGetBestIndividual(pop->tableInd[2]));
+		printf("populationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
+
 		
+		fprintf(stderr, "(best quality %f)\n\n", (double) 1.00/individualGetQuality(populationGetBestIndividual(pop)));	
 		// if(verbose == 1){
-		// 			individualPrint(stderr, populationGetBestIndividual(pop));	
 		// 	}
 	}
 	
