@@ -4,6 +4,13 @@
 
 
 //
+
+double individualGetQuality(Individual *ind);
+double individualGetQualityCumulation(Individual *ind);
+int *individualGetGenotype(Individual *ind);
+void individualPutQuality(Individual *ind, double value);
+void individualPutQualityCumulation(Individual *ind, double value);
+
 struct Individual_t {
 	int length;
 	int nbVal;
@@ -11,10 +18,6 @@ struct Individual_t {
 	double quality;
 	double qualityCumulation;
 };
-
-
-
-
 
 int *individualGetGenotype(Individual *ind) {
 	return ind->genoType;
@@ -38,7 +41,7 @@ void individualPutQuality(Individual *ind, double value){
 Individual *individualCreate(int length, int nbVal) {
 
 	Individual *newIndividual;
-	newIndividual = calloc(1, sizeof(Individual));
+	newIndividual = malloc(sizeof(Individual));
 	newIndividual->genoType = calloc(length, sizeof(int));
 	newIndividual->length = length;
 	newIndividual->nbVal = nbVal;
@@ -81,17 +84,18 @@ void individualRandomPermInit(Individual *ind) {
 
 
 	int length = individualGetLength(ind);
+
 	for(int i = 0; i<length; i++)
 		individualSetGene(ind, i, i);
 
 	for (int i = 0; i < length; i++)  {
       
-        int tmp[length];
+        // int tmp[length];
         int randval = rand()%(length-i) + i;
-        tmp[i] = individualGetGene(ind, i);
+        int tmp = individualGetGene(ind, i);
 
         individualSetGene(ind, i, individualGetGene(ind, randval));
-        individualSetGene(ind, randval, tmp[i]);
+        individualSetGene(ind, randval, tmp);
  
     }
 	
