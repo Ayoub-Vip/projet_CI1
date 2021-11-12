@@ -19,8 +19,8 @@ struct Population_t {
 	int nbVal;
 	int size;
 	float pmutation;
-	double sumFitness;
 	double (*fitness)(Individual *, void *);
+	double sumFitness;
 	void *paramFitness;
 	void (*init)(Individual *);
 	void (*mutation)(Individual *, float);
@@ -197,35 +197,66 @@ static int compare ( const void *pa, const void *pb ) {
 
 	}
 
+
+
+
 void populationEvolve(Population *pop) {
 	
 	int eliteSize = pop->eliteSize;
 	int size = pop->size;
 	Individual** tableInd = pop->tableInd;
-	void* paramFitness = pop->paramFitness;
+	// void* paramFitness = pop->paramFitness;
 
-	double table_fitness[size][2];
+	double **table_fitness = malloc(size * sizeof(double*));
+	fprintf(stderr, "populationInit inside population.C: size = %d, eliteSize=%d OK\n", size, eliteSize );
 	
-	Population* pop_t = populationInit(pop->length, pop->nbVal, size, pop->fitness,
-									   paramFitness,pop->init, pop->mutation,
-									   pop->pmutation, pop->crossover, eliteSize);
+
+	// Population* pop_t = populationInit(pop->length, pop->nbVal, size, pop->fitness,
+	// 								   pop->paramFitness,pop->init, pop->mutation,
+	// 								   pop->pmutation, pop->crossover, eliteSize);
+
+
 
 
 	for ( int i = 0; i < size; i++ ) {
+		table_fitness[i] = malloc(2 * sizeof(double));
     	table_fitness[i][0] = individualGetQuality(tableInd[i]);
     	table_fitness[i][1] = i;
 
     }
+	fprintf(stderr, "Inside population.C: boucle1 OK\n" );
+
+    for (int i = 0; i < size; ++i){
+        	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
+    }
+   
+	fprintf(stderr, "\nInside population.C: before qsort OK\n" );
+
+
+
+/////
+
+
 
 
     qsort(table_fitness, size, sizeof table_fitness[0], compare);
-	
+
+
+	fprintf(stderr, "\nInside population.C: qsort OK\n after sqort\n" );
+	for (int i = 0; i < size; ++i){
+        	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
+    }
+	//conservation de k meilleur ind
 	for(int i = 0; i < eliteSize; i++)
 	{
 		int indice = (int) table_fitness[i][1];
-		pop_t->tableInd[i] = pop->tableInd[indice];
+
+		Individual *tmp  = pop->tableInd[i];
+		pop->tableInd[i] = pop->tableInd[indice];
+		pop->tableInd[indice] = tmp;
 	}
 
+	//selection et combinaison de k->fin autres ind
 	for(int i = eliteSize; i < size; i++)
 	{
 		Individual *parent1, *parent2;
@@ -236,37 +267,48 @@ void populationEvolve(Population *pop) {
 		
 		} while (parent1 == parent2);
 
-		pop_t->tableInd[i] = individualSeqCrossOver(parent1, parent2);
+		pop->tableInd[i] = individualSeqCrossOver(parent1, parent2);
 	}
 	
-	pop_t->sumFitness = individualGetQuality(tableInd[0]);
-	for(int i = 1; i < size; i++)
+	//Mutation + trouver les valeurs fitness et qualitycumulation des ind
+	pop->sumFitness = individualGetQuality(tableInd[0]);
+	individualPutQuality(pop->tableInd[0], pop->fitness(pop->tableInd[0], pop->paramFitness));
+
+
+	for (int i = 1; i < size; i++)
 	{
-		individualSeqMutation(pop_t->tableInd[i], pop->pmutation);
+		individualSeqMutation(pop->tableInd[i], pop->pmutation);
 
-		individualPutQuality(pop_t->tableInd[i], pop->fitness(pop_t->tableInd[i], paramFitness));
+		individualPutQuality(pop->tableInd[i], pop->fitness(pop->tableInd[i], pop->paramFitness));
 
-		pop_t->sumFitness += individualGetQuality(pop_t->tableInd[i]);
+		pop->sumFitness += individualGetQuality(pop->tableInd[i]);
 
 	}
 
 
-	double QC = individualGetQuality(pop_t->tableInd[0])/(pop_t->sumFitness);
+	double QC = individualGetQuality(pop->tableInd[0])/(pop->sumFitness);
 
-	individualPutQualityCumulation(pop_t->tableInd[0], QC);
+	individualPutQualityCumulation(pop->tableInd[0], QC);
 
 
 	for(int i = 1; i < size; i++){
 
-		QC += individualGetQuality(pop_t->tableInd[i])/(pop_t->sumFitness);
+		QC += individualGetQuality(pop->tableInd[i])/(pop->sumFitness);
 
-		individualPutQualityCumulation(pop_t->tableInd[i], QC);
+		individualPutQualityCumulation(pop->tableInd[i], QC);
 	}
+
+	for (int i = 0; i < size; ++i)
+		free(table_fitness[i]);
+
+
+
+	free(table_fitness);
 	
-	Population* p = pop;
-	pop = pop_t;
+	// Population* p = pop;
+	// pop = pop;
 	
-	populationFree(p);
+	// populationFree(p);
 		
  
 }
