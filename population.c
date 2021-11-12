@@ -3,6 +3,14 @@
 #include "population.h"
 // #include "individual.c"
 
+double individualGetQuality(Individual *ind);
+double individualGetQualityCumulation(Individual *ind);
+int *individualGetGenotype(Individual *ind);
+void individualPutQuality(Individual *ind, double value);
+void individualPutQualityCumulation(Individual *ind, double value);
+// int compare ( const void *pa, const void *pb );
+
+
 
 
 struct Population_t {
@@ -76,6 +84,8 @@ Population *populationInit(int length, int nbVal, int size,
 		// + ((popInit->tableInd[i+1]->quality)/popInit->sumFitness);
 	}
 
+	return popInit;
+
 }
 
 
@@ -127,7 +137,7 @@ Individual *populationGetBestIndividual(Population *pop) {
 	for (int i = 0; i < pop->size; ++i)
 		if(individualGetQuality(pop->tableInd[i]) == maxFitness)
 			return pop->tableInd[i];
-
+	return NULL;
 
 }
 
@@ -173,10 +183,19 @@ Individual *populationSelection(Population *pop) {
 		}
 	}
 
+	return NULL;
 
 }
 
+static int compare ( const void *pa, const void *pb ) {
+	const double *a = *(const double **)pa;
+	const double *b = *(const double **)pb;
+	if(a[0] == b[0])
+		return (int) (a[1] - b[1]);
+	else
+		return (int) (a[0] - b[0]);
 
+	}
 
 void populationEvolve(Population *pop) {
 	
@@ -184,46 +203,36 @@ void populationEvolve(Population *pop) {
 	int size = pop->size;
 	Individual** tableInd = pop->tableInd;
 	void* paramFitness = pop->paramFitness;
-	double (*fitness) = pop->fitness;
-	
-	double table_fitness[size];
-	int elite_individus[eliteSize-1];
-	int k = 0;
-	
-	for (int i = 0; i < size; i++)
-		table_fitness[i] = individualGetQuality(tableInd[i]);
-	
-	
-	mergesort(table_fitness, size);
-	
-	for( int i = 0; i<size && k<eliteSize-1; i++)
-	{
-		
-		if( individualGetQuality(tableInd[i]) >=table_fitness[size - eliteSize] && individualGetQuality(tableInd[i]) <= table_fitness[size-2])
-		{
-			elite_individus[k] = i;
-			k++;
-		}
-	}
+
+	double table_fitness[size][2];
 	
 	Population* pop_t = populationInit(pop->length, pop->nbVal, size, pop->fitness,
 									   paramFitness,pop->init, pop->mutation,
 									   pop->pmutation, pop->crossover, eliteSize);
+
+
+	for ( int i = 0; i < size; i++ ) {
+    	table_fitness[i][0] = individualGetQuality(tableInd[i]);
+    	table_fitness[i][1] = i;
+
+    }
+
+
+    qsort(table_fitness, size, sizeof table_fitness[0], compare);
 	
-	pop_t->tableInd[0]= populationGetBestIndividual(pop);
-	
-	for(int i = 0; i <= k; i++)
+	for(int i = 0; i < eliteSize; i++)
 	{
-		pop_t->tableInd[i+1] = tableInd[elite_individus[i]];
+		int indice = (int) table_fitness[i][1];
+		pop_t->tableInd[i] = pop->tableInd[indice];
 	}
-	
-	for(int i = k+1; i<size; i++)
+
+	for(int i = eliteSize; i < size; i++)
 	{
 		Individual *parent1, *parent2;
 		
 		do{
 			parent1 = populationSelection(pop);
-			parent2 = populationSelection(pop); /* faudrait vérifier que les parents sont différents*/
+			parent2 = populationSelection(pop);
 		
 		} while (parent1 == parent2);
 
@@ -234,15 +243,12 @@ void populationEvolve(Population *pop) {
 	for(int i = 1; i < size; i++)
 	{
 		individualSeqMutation(pop_t->tableInd[i], pop->pmutation);
-		// pop_t->tableInd[i]->quality = pop->fitness(pop_t->tableInd[i], paramFitness);
+
 		individualPutQuality(pop_t->tableInd[i], pop->fitness(pop_t->tableInd[i], paramFitness));
 
 		pop_t->sumFitness += individualGetQuality(pop_t->tableInd[i]);
 
 	}
-	
-	// pop_t->tableInd[0]->qualityCumulation = (pop_t->tableInd[0]->quality)/(pop_t->sumFitness);
-
 
 
 	double QC = individualGetQuality(pop_t->tableInd[0])/(pop_t->sumFitness);
@@ -250,20 +256,12 @@ void populationEvolve(Population *pop) {
 	individualPutQualityCumulation(pop_t->tableInd[0], QC);
 
 
-	for(int i = 1; i < pop_t->size; i++){
+	for(int i = 1; i < size; i++){
 
 		QC += individualGetQuality(pop_t->tableInd[i])/(pop_t->sumFitness);
 
 		individualPutQualityCumulation(pop_t->tableInd[i], QC);
 	}
-	////////////
-
-	
-	/*for(int i = 0; i<size-1; i++)
-	{
-		 pop_t->tableInd[i+1]->qualityCumulation = pop_t->tableInd[i]->qualityCumulation + 
-		                                          ((pop_t->tableInd[i+1]->quality)/pop_t->sumFitness);
-	}*/
 	
 	Population* p = pop;
 	pop = pop_t;
