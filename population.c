@@ -48,12 +48,14 @@ Population *populationInit(int length, int nbVal, int size,
 	popInit->eliteSize = eliteSize;
 	popInit->pmutation = pmutation;
 	popInit->crossover = crossover;
+	popInit->fitness = fitness;
 	popInit->mutation = mutation;
 	popInit->length = length;
 	popInit->nbVal = nbVal;
 	popInit->size = size;
 	popInit->init = init;
 	popInit->sumFitness = 0;
+
 
 	Individual **ind = popInit->tableInd;
 	
@@ -137,6 +139,7 @@ Individual *populationGetBestIndividual(Population *pop) {
 	for (int i = 0; i < pop->size; ++i)
 		if(individualGetQuality(pop->tableInd[i]) == maxFitness)
 			return pop->tableInd[i];
+
 	return NULL;
 
 }
@@ -200,15 +203,17 @@ static int compare ( const void *pa, const void *pb ) {
 
 
 
+
 void populationEvolve(Population *pop) {
 	
 	int eliteSize = pop->eliteSize;
 	int size = pop->size;
 	Individual** tableInd = pop->tableInd;
-	// void* paramFitness = pop->paramFitness;
+	double (*fitness_t)(Individual *, void *) = pop->fitness;
 
 	double **table_fitness = malloc(size * sizeof(double*));
-	fprintf(stderr, "populationInit inside population.C: size = %d, eliteSize=%d OK\n", size, eliteSize );
+	// fprintf(stderr, "populationInit inside population.C: size = %d, eliteSize=%d OK\n", size, eliteSize );
+	// fprintf(stderr, "fitness=%f OK\n", fitness_t(pop->tableInd[0], pop->paramFitness) );
 	
 
 	// Population* pop_t = populationInit(pop->length, pop->nbVal, size, pop->fitness,
@@ -224,21 +229,15 @@ void populationEvolve(Population *pop) {
     	table_fitness[i][1] = i;
 
     }
-	fprintf(stderr, "Inside population.C: boucle1 OK\n" );
-
+	// fprintf(stderr, "Inside population.C: boucle1 OK\n" );
+printf("\n");
     for (int i = 0; i < size; ++i){
         	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
     }
    
-	fprintf(stderr, "\nInside population.C: before qsort OK\n" );
-
-
+	// fprintf(stderr, "\nInside population.C: before qsort OK\n" );
 
 /////
-
-
-
-
     qsort(table_fitness, size, sizeof table_fitness[0], compare);
 
 
@@ -246,6 +245,8 @@ void populationEvolve(Population *pop) {
 	for (int i = 0; i < size; ++i){
         	fprintf(stderr, "(%f, %d),",  table_fitness[i][0], (int) table_fitness[i][1]);
     }
+printf("\n");
+
 	//conservation de k meilleur ind
 	for(int i = 0; i < eliteSize; i++)
 	{
@@ -255,9 +256,14 @@ void populationEvolve(Population *pop) {
 		pop->tableInd[i] = pop->tableInd[indice];
 		pop->tableInd[indice] = tmp;
 	}
+	// fprintf(stderr, "\nInside population.C:\nafter fisrt eliteSize\n" );
 
 	//selection et combinaison de k->fin autres ind
-	for(int i = eliteSize; i < size; i++)
+
+	Individual **nextGeneration;
+	nextGeneration = calloc(size - eliteSize,sizeof(Individual*));
+
+	for(int i = 0; i < size-eliteSize; i++)
 	{
 		Individual *parent1, *parent2;
 		
@@ -267,29 +273,40 @@ void populationEvolve(Population *pop) {
 		
 		} while (parent1 == parent2);
 
-		pop->tableInd[i] = individualSeqCrossOver(parent1, parent2);
+		nextGeneration[i] = individualSeqCrossOver(parent1, parent2);
 	}
 	
+
+	for(int i = eliteSize; i < size; i++){
+		individualFree(pop->tableInd[i]);
+		pop->tableInd[i] = nextGeneration[i-eliteSize];
+
+	}
+	// fprintf(stderr, "\nInside population.C:\n after populationSelection\n" );
+
 	//Mutation + trouver les valeurs fitness et qualitycumulation des ind
+
 	pop->sumFitness = individualGetQuality(tableInd[0]);
-	individualPutQuality(pop->tableInd[0], pop->fitness(pop->tableInd[0], pop->paramFitness));
+	individualPutQuality(pop->tableInd[0], fitness_t(pop->tableInd[0], pop->paramFitness));//pop->
+	// fprintf(stderr, "\nInside population.C:\n after putQuality[0]\n" );
 
 
 	for (int i = 1; i < size; i++)
 	{
 		individualSeqMutation(pop->tableInd[i], pop->pmutation);
 
-		individualPutQuality(pop->tableInd[i], pop->fitness(pop->tableInd[i], pop->paramFitness));
+		individualPutQuality(pop->tableInd[i], fitness_t(pop->tableInd[i], pop->paramFitness));
 
 		pop->sumFitness += individualGetQuality(pop->tableInd[i]);
 
 	}
 
+	// fprintf(stderr, "\nInside population.C:\n after Mutation + putQuality\n" );
+
+
 
 	double QC = individualGetQuality(pop->tableInd[0])/(pop->sumFitness);
-
 	individualPutQualityCumulation(pop->tableInd[0], QC);
-
 
 	for(int i = 1; i < size; i++){
 
@@ -297,6 +314,8 @@ void populationEvolve(Population *pop) {
 
 		individualPutQualityCumulation(pop->tableInd[i], QC);
 	}
+	// fprintf(stderr, "\nInside population.C:\n after  + putQualityCumulation\n" );
+
 
 	for (int i = 0; i < size; ++i)
 		free(table_fitness[i]);
