@@ -1,152 +1,190 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
-#include "individual.h"
+#include "gifenc.h"
+// #include "population.c"
 #include "population.h"
+#include "individual.h"
 #include "tsp.h"
 
+// double fitness(Individual* ind, void* map);
+int *individualGetGenotype(Individual *ind);
 
-/* ========================================================================== *
- * 								 Prototypes									  *
- * ========================================================================== */
+// Individual *populationGetBestIndividual(Population *pop);
 
-/* Return the number of 1's contained in a binary sequence.
- *
- * PARAMETERS:
- * - `ind`: the individual representing the binary sequence.
- *
- * RETURNS: a double containing the number of 1's.
- */
-static double num1InSeq(Individual *ind, __attribute__((unused)) void *param);
-
-/* Return the value of the function f(x) = -x^2/10 + 3x + 4 at a given x.
- *
- * PARAMETERS:
- * - `ind`: the individual containing the binary reprensation of x.
- *
- * RETURNS: a double containing the value of f(x).
- */
-static double f(Individual *ind, __attribute__((unused)) void *param);
-
-// Start the genetic algorithm using `num1InSeq` as fitness function.
-static void maximizeNumberOf1(void);
-
-// Start the genetic algorithm using `f` as fitness function
-static void maximizeFunction(void);
-
-// Start the genetic algorithm on the travelling salesman problem.
-static void tsp(int argc, char const *argv[]);
+// Opaque structure of a map. 
+struct Map_t {
+	int nbTowns;
+	double *x;
+	double *y;
+};
 
 
-/* ========================================================================== *
- * 							   Implementation                                 *
- * ========================================================================== */
+static void terminate(const char *message);
 
-int main(int argc, char const *argv[]) {
+static void getField(char *inputstring, char *fields[3]);
 
-        srand(time(NULL));
+
+static void terminate(const char *message) {
+	fprintf(stderr,"%s\n", message);
+	exit(EXIT_FAILURE);
+}
+
+static void getField(char *inputstring, char *fields[3]) {
+	fields[0] = strtok (inputstring, ",");
+	for (int i =1; i < 3; i++) {
+		fields[i] = strtok (NULL, ",");
+	}
+}
+
+Map *tspLoadMapFromFile(const char *filename, int nbTowns) {
+	FILE *fp = fopen(filename, "r");
+	if (fp == NULL)
+		terminate("tspLoadMapFromFile: file can not be opened");
+
+	char line[1024];
+
+	Map *map = malloc(sizeof(Map));
+
+	if (map == NULL)
+	  terminate("tspLoadMapFromFile: map allocation failed");
+
+	map->nbTowns = nbTowns;
+	map->x = malloc(nbTowns * sizeof(double));
+	map->y = malloc(nbTowns * sizeof(double));
+
+	int i = 0;
+	while (i< nbTowns && fgets(line, 1024, fp)) {
+		char *fields[4];
+		getField(line, fields);
+		map->x[i] = strtod(fields[1], NULL);
+		map->y[i] = strtod(fields[2], NULL);
+		i++;
+	}
+
+	printf("Loaded %d towns from %s\n", nbTowns, filename);
+
+	return map;
+}
+
+void tspFreeMap(Map *map) {
+	free(map->x);
+	free(map->y);
+	free(map);
+}
+
+void tspTourToGIF(int *tour, Map *map, const char *filename, int size) {
+
+  double minX = map->x[0];
+  double maxX = minX;
+  double minY = map->y[0];
+  double maxY = minY;
+
+  for (int pos = 0; pos < map->nbTowns; pos++) {
+    
+    double currentX = map->x[pos];
+    double currentY = map->y[pos];
+    
+    if (currentX < minX)
+      minX = currentX;
+    else if (currentX > maxX)
+      maxX = currentX;
+    
+    if (currentY < minY)
+      minY = currentY;
+    else if (currentY > maxY)
+      maxY = currentY;
+  }
   
-	if (argc == 1) {
-		fprintf(stderr, "Usage: ./testga <mode>.\n");
-		exit(EXIT_FAILURE);
+  double xRange = maxX - minX;
+  double yRange = maxY - minY;
+  
+  int sizex, sizey;
+  if (xRange > yRange) {
+    sizex = size;
+    sizey = size*yRange/xRange;
+  } else {
+    sizex = size*xRange/yRange;
+    sizey = size;
+  }
+
+  ge_GIF *gif = ge_new_gif(filename,
+			   sizex+10, sizey+10,     /* w=1000, h=700 */
+			   (uint8_t []) {          /* palette */
+			     0xFF, 0xFF, 0xFF,   /* 0 -> white */
+			       0xFF, 0x00, 0x00,   /* 1 -> red */
+			       0x00, 0x00, 0xFF,   /* 2 -> blue */
+			       0x00, 0x00, 0x00    /* 3 -> black */
+			       },
+			   2,                      /* palette depth == log2(# of colors) */
+			   1                       /* Play it once */
+			   );
+  
+  double prevX = (map->x[tour[map->nbTowns-1]] - minX)*sizex/xRange+5;
+  double prevY = (map->y[tour[map->nbTowns-1]] - minY)*sizey/yRange+5;
+  double nextX, nextY;
+
+  // clean
+  for (int j = 0; j < (gif->w * gif->h); j++)
+    gif->frame[j] = 0;
+  
+  for (int pos = 0; pos < map->nbTowns; pos++) {
+    nextX = (map->x[tour[pos]] - minX)*sizex/xRange+5;
+    nextY = (map->y[tour[pos]] - minY)*sizey/yRange+5;
+    ge_draw_line(gif, (int) prevX, (int) prevY, (int) nextX, (int) nextY, 2);
+    prevX = nextX;
+    prevY = nextY;
+  }
+
+  ge_add_frame(gif, 0);
+  ge_close_gif(gif);  
+}
+
+
+double tspGetTourLength(int *tour, Map *map) {
+
+	double tourLength;
+	int i = 0;
+
+	for (; i < map->nbTowns; ++i)  {
+		int villeNum = tour[i];
+		tourLength += sqrt( pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2) );
 	}
 
-	int mode = atoi(argv[1]);
-	switch (mode) {
-	case 1:
-		maximizeNumberOf1();
-		break;
-	case 2:
-		maximizeFunction();
-		break;
-	case 3:
-		tsp(argc, argv);
-		break;
-	default:
-		fprintf(stderr, "<mode> should be 1, 2 or 3, got %d\n", mode);
-		exit(EXIT_FAILURE);
-	}
+	tourLength += sqrt( pow(map->x[tour[i]] - map->x[tour[0]], 2) + pow(map->y[tour[i]] - map->y[tour[0]], 2) );
 
-	return 0;
+	return tourLength;
 }
 
 
-static double num1InSeq(Individual *ind, __attribute__((unused)) void *param) {
-	double x = 0;
-	for (int i = 0; i < individualGetLength(ind); i++)
-		if (individualGetGene(ind, i) > 0)
-			x += 1.0;
 
-	return x;
+static double fitness(Individual* ind, void* map) {
 
+	int *tour = individualGetGenotype(ind);
+
+	return (double)1/tspGetTourLength((int*) tour,(Map*) map);
 }
 
-static double f(Individual *ind, __attribute__((unused)) void *param) {
-	int x = 0;
-	for (int i = 0; i < individualGetLength(ind); i++)
-		x = 2*x + individualGetGene(ind, i);
-
-	return -x*x/10.0 + 3.0*x + 4;
-}
-
-static void maximizeNumberOf1() {
-	Population *pop = populationInit(20, 2, 100,
-	                                 num1InSeq, NULL, individualRandomInit,
-	                                 individualSeqMutation, 0.01,
-	                                 individualSeqCrossOver, 2);
 
 
-	for (int t = 0; t < 100; t++) {
+int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
+	
+	int nbTowns = map->nbTowns;
+	
+	Population *pop = populationInit( nbTowns, nbTowns, sizePopulation, fitness, map,
+	                   individualRandomPermInit, individualPermMutation,pmutation,
+	                   individualPermCrossOver, eliteSize);
+	
+	for(int i = 0; i<nbIterations; i++)
+	{
 		populationEvolve(pop);
-		printf("Step %3d: Max fitness = %lf\n", t+1, populationGetMaxFitness(pop));
+		
+		// if(verbose == 1){
+		// 			individualPrint(stderr, populationGetBestIndividual(pop));	
+		// 	}
 	}
-
-	printf("Best individual found: ");
-	individualPrint(stdout, populationGetBestIndividual(pop));
-	printf(", with fitness of: %lf\n", populationGetMaxFitness(pop));
-
-	populationFree(pop);
-}
-
-static void maximizeFunction() {
-	Population *pop = populationInit(5, 2, 6,
-	                                 f, NULL, individualRandomInit,
-	                                 individualSeqMutation, 0.1,
-	                                 individualSeqCrossOver, 2);
-
-	for (int t = 0; t < 30; t++) {
-		populationEvolve(pop);
-		printf("Step %3d: Max fitness = %lf\n", t+1, populationGetMaxFitness(pop));
-	}
-
-	printf("Best individual found: ");
-	individualPrint(stdout, populationGetBestIndividual(pop));
-	printf(", with fitness of: %lf\n", populationGetMaxFitness(pop));
-
-	populationFree(pop);
-}
-
-static void tsp(int argc, char const *argv[]) {
-	if (argc != 8) {
-		fprintf(stderr, "Usage: ./testga 3 <file> <ntowns> <size> <pm> <elitesize> <niterations>\n");
-		exit(EXIT_FAILURE);
-	}
-
-	const char *filename = argv[2];
-	int nTowns = atoi(argv[3]);
-	int size = atoi(argv[4]);
-	float pm = atof(argv[5]);
-	int eliteSize = atoi(argv[6]);
-	int nbIterations = atoi(argv[7]);
-
-	Map *map = tspLoadMapFromFile(filename, nTowns);
-	int *bestTour = tspOptimizeByGA(map, nbIterations, size, eliteSize, pm, 1);
-
-	printf("Best tour found: (length = %f)", tspGetTourLength(bestTour, map));
-	for (int i = 0; i < nTowns; i++)
-		printf(" %d", bestTour[i]);
-	printf("\n");
-
-	tspTourToGIF(bestTour, map, "tour.gif", 1000);
+	
+	return populationGetBestIndividual(pop);
 }
