@@ -4,14 +4,6 @@
 
 
 //
-double individualGetQuality(Individual *ind);
-double individualGetQualityCumulation(Individual *ind);
-int *individualGetGenotype(Individual *ind);
-void individualPutQuality(Individual *ind, double value);
-void individualPutQualityCumulation(Individual *ind, double value);
-
-
-
 struct Individual_t {
 	int length;
 	int nbVal;
@@ -19,6 +11,9 @@ struct Individual_t {
 	double quality;
 	double qualityCumulation;
 };
+
+
+
 
 
 int *individualGetGenotype(Individual *ind) {
@@ -50,7 +45,6 @@ Individual *individualCreate(int length, int nbVal) {
 
 
 	return newIndividual;
-
 }
 
 
@@ -62,7 +56,6 @@ void individualFree(Individual *ind) {
 
 int individualGetLength(Individual *ind) {
 	return ind->length;
-	
 }
 
 
@@ -105,33 +98,6 @@ void individualRandomPermInit(Individual *ind) {
 
 }
 
-	/*for( i = 0; i<length; i++)
-	{
-		genotype[i] = i;
-	}
-	
-	for( i = 0; i<length, i++)
-	{
-		int p = rand()%nbVal;
-		int q = rand()%nbVal;
-		
-		
-			int a = genotype[p];
-			genotype[p] = genotype[q];
-			genotype[q] = a;
-		
-	}
-	
-	ind->genoType = genotype;
-
-*/
-
-        // ind->genoType[p] = ind->genoType[randval];
-        // ind->genoType[q] = tmp;
-
-
-
-
 
 //////////////////////////////////////////////////////////////////
 Individual *individualCopy(Individual *ind) {
@@ -143,7 +109,7 @@ Individual *individualCopy(Individual *ind) {
 	
 	for (int i = 0; i < length; ++i)
 		individualSetGene(copyIndividual, i, individualGetGene(ind, i));
-		// copyIndividual->genoType[i] = ind->genoType[i];
+
 
 
 	copyIndividual->length = length;
@@ -172,11 +138,6 @@ void individualSeqMutation(Individual *ind, float pm) {
 
 	if (( (double)rand()/(double)RAND_MAX ) <= pm){
 
-		// int p = rand()%ind->nbVal;
-		// int q = rand()%ind->nbVal;
-
-		// for(;q==p;)
-		// 	q = rand()%ind->nbVal;
 		int p, q;
 
 		do{
@@ -187,8 +148,7 @@ void individualSeqMutation(Individual *ind, float pm) {
 		int a = individualGetGene(ind, p);
 		individualSetGene(ind, p, individualGetGene(ind, q));
 		individualSetGene(ind, q, a);
-		// ind->genotype[p] = ind->genotype[q];
-		// ind->genotype[q] = a;
+
 	}
 
 	
@@ -199,11 +159,10 @@ Individual *individualSeqCrossOver(Individual *parent1, Individual *parent2) {
 	
 
 	Individual *enfant = individualCopy(parent1);
-	int p = rand()%individualGetLength(parent1);
+	int l = rand()%individualGetLength(parent1);
 
-	for(int i = p; i< enfant->length; i++)
+	for(int i = l; i< enfant->length; i++)
 		individualSetGene(enfant,  i, individualGetGene(parent2, i));
-		// geno_enfant[i] = genotype2[i];
 
 	
 	return enfant;	
@@ -223,13 +182,6 @@ void individualPermMutation(Individual *ind, float pm) {
 	int p1, p2;
 	int length = ind->length;
 	
-	/*for(;;) {
-		int p1 = rand()%length;
-		int p2 = rand()%length;
-		
-		if(p1 != p2)
-			break;
-	}*/
 	do{
 		p1 = rand()%length;
 		p2 = rand()%length;
@@ -245,9 +197,9 @@ void individualPermMutation(Individual *ind, float pm) {
 	{
 		int a = individualGetGene(ind, p1);
 		ind->genoType[p1] = individualGetGene(ind, p2);
-		// ind->genoType[p1] = ind->genoType[p2];
+
 		individualSetGene(ind,  p2, a);
-		// ind->genoType[p2] = a;
+
 		p1++;
 		p2--;
 	}
@@ -255,49 +207,47 @@ void individualPermMutation(Individual *ind, float pm) {
 	
 	}
 
-Individual *individualPermCrossOver(Individual *parent1, Individual *parent2) {
-	
+Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
+{
+	Individual *enfant = individualCopy(parent1);
 	int p1 = rand()%individualGetLength(parent1);
 	int p2 = rand()%individualGetLength(parent2);
 
 		
-	if( p1>p2){
+	if(p1>p2){
 		int a = p1;
 		p1 = p2;
 		p2 = a;
 	}
 
-	int tabIndex[parent1->length+1]; //hypothese: length = nbVal 
+	int tabIndex[enfant->length+1]; 
 
-	for (int i = 0; i < parent1->length; ++i) {
-		tabIndex[ parent1->genoType[i] ] = i;
+	for (int i = 0; i < enfant->length; ++i) {
+		tabIndex[ enfant->genoType[i] ] = i;
 	}
 
 
 
 
 
-	for (; p1 <= p2 ;p1++)
+	for ( ; p1 <= p2; p1++)
 	{
-		if (parent1->genoType[p1] != parent2->genoType[p1] )
-		{
-			int a = individualGetGene(parent1, p1);
-			int b = individualGetGene(parent2, p1);
-
-			// parent1->genoType[tabIndex[b]] = a;
-			individualSetGene(parent1,  tabIndex[b], a);
-			// parent1->genoType[p1] = b ;
-			individualSetGene(parent1,  p1, b);
-
-
-			int tmp = tabIndex[b];
-			tabIndex[b] = tabIndex[a];
-			tabIndex[a] = tmp;
 		
+		int a = individualGetGene(enfant, p1);
+		int b = individualGetGene(parent2, p1);
 
-		}
+
+		individualSetGene(enfant,  tabIndex[b], a);
+		individualSetGene(enfant,  p1, b);
+
+
+		int tmp = tabIndex[b];
+		tabIndex[b] = tabIndex[a];
+		tabIndex[a] = tmp;
+
 
 	}
+	return enfant;
 
 }
 
