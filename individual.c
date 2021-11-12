@@ -160,7 +160,7 @@ void individualSeqMutation(Individual *ind, float pm) {
 ///////////////////////////
 
 Individual *individualSeqCrossOver(Individual *parent1, Individual *parent2) {
-	
+
 
 	Individual *enfant = individualCopy(parent1);
 	int l = rand()%individualGetLength(parent1);
@@ -168,7 +168,7 @@ Individual *individualSeqCrossOver(Individual *parent1, Individual *parent2) {
 	for(int i = l; i< enfant->length; i++)
 		individualSetGene(enfant,  i, individualGetGene(parent2, i));
 
-	
+
 	return enfant;	
 
 
@@ -189,9 +189,9 @@ void individualPermMutation(Individual *ind, float pm) {
 	do{
 		p1 = rand()%length;
 		p2 = rand()%length;
-	}while(p1 == p2);
+	} while (p1 == p2);
 	
-	while(p1 > p2) {
+	if(p1 > p2) {
 		int a = p1;
 		p1 = p2;
 		p2 = a;
