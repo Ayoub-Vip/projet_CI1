@@ -85,12 +85,11 @@ void individualRandomPermInit(Individual *ind) {
 
 	int length = individualGetLength(ind);
 
-	for(int i = 0; i<length; i++)
+	for(int i = 0; i < length; i++)
 		individualSetGene(ind, i, i);
 
-	for (int i = 0; i < length; i++)  {
-      
-        // int tmp[length];
+	for (int i = 0; i < length; i++) {
+
         int randval = rand()%(length-i) + i;
         int tmp = individualGetGene(ind, i);
 
@@ -180,9 +179,8 @@ Individual *individualSeqCrossOver(Individual *parent1, Individual *parent2) {
 
 void individualPermMutation(Individual *ind, float pm) {
 	
-	if (!(( (double)rand()/(double)RAND_MAX ) <= pm))
-		return;
-
+	if ((( (double)rand()/(double)RAND_MAX ) <= pm))
+	{
 	int p1, p2;
 	int length = ind->length;
 	
@@ -197,7 +195,7 @@ void individualPermMutation(Individual *ind, float pm) {
 		p2 = a;
 	}
 	
-	for(;p1>=p2;)
+	while(p1>=p2)
 	{
 		int a = individualGetGene(ind, p1);
 		ind->genoType[p1] = individualGetGene(ind, p2);
@@ -207,7 +205,7 @@ void individualPermMutation(Individual *ind, float pm) {
 		p1++;
 		p2--;
 	}
-	
+	}
 	
 	}
 
