@@ -12,7 +12,7 @@
 // double fitness(Individual* ind, void* map);
 int *individualGetGenotype(Individual *ind);
 
-// Individual *populationGetBestIndividual(Population *pop);
+Individual *populationGetBestIndividual(Population *pop);
 
 // Opaque structure of a map. 
 struct Map_t {
@@ -186,5 +186,5 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 		// 	}
 	}
 	
-	return populationGetBestIndividual(pop);
+	return individualGetGenotype(populationGetBestIndividual(pop));
 }
