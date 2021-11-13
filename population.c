@@ -10,7 +10,7 @@ void individualPutQuality(Individual *ind, double value);
 void individualPutQualityCumulation(Individual *ind, double value);
 // int compare ( const void *pa, const void *pb );
 
-
+Individual *getpopind(Population *pop, int i);
 
 
 struct Population_t {
@@ -53,8 +53,8 @@ Population *populationInit(int length, int nbVal, int size,
 	popInit->length = length;
 	popInit->nbVal = nbVal;
 	popInit->size = size;
-	popInit->sumFitness = 0;
 	popInit->init = init;
+	popInit->sumFitness = 0; //initialement
 
 	if (init == NULL)
 		return popInit;
@@ -67,17 +67,18 @@ Population *populationInit(int length, int nbVal, int size,
 	for (int i = 0; i < popInit->size; ++i)
 	{
 		if((ind[i] = individualCreate(length, nbVal)) != NULL)
-		{ 
+		{
 			init(ind[i]);
 			individualPutQuality(ind[i], fitness(ind[i], paramFitness));
 			popInit->sumFitness += individualGetQuality(ind[i]);
 		}
 	}
 
-	double QC = individualGetQuality(ind[0])/(popInit->sumFitness);
 
+
+	double QC = individualGetQuality(ind[0])/(popInit->sumFitness);
 	individualPutQualityCumulation(ind[0], QC);
-	// ind[0]->qualityCumulation = (popInit->tableInd[0]->quality)/(popInit->sumFitness);
+
 
 
 	for( int i = 1; i < popInit->size; i++){
@@ -86,8 +87,6 @@ Population *populationInit(int length, int nbVal, int size,
 
 		individualPutQualityCumulation(ind[i], QC);
 
-		// popInit->tableInd[i+1]->qualityCumulation = popInit->tableInd[i]->qualityCumulation 
-		// + ((popInit->tableInd[i+1]->quality)/popInit->sumFitness);
 	}
 
 	return popInit;
@@ -135,7 +134,9 @@ double populationGetAvgFitness(Population *pop) {
 	return (pop->sumFitness/(double) pop->size);
 
 }
-
+Individual *getpopind(Population *pop, int i){
+	return pop->tableInd[i];
+}
 
 Individual *populationGetBestIndividual(Population *pop) {
 	double maxFitness = populationGetMaxFitness(pop);
@@ -155,6 +156,12 @@ void populationFree(Population *pop) {
 		free(pop->tableInd[i]);
 
 	free(pop->tableInd);
+	// free(pop->crossover);
+	// free(pop->mutation);
+	free(pop->paramFitness);
+	// free(pop->fitness);
+	// free(pop->init);
+
 	free(pop);
 
 }
@@ -172,22 +179,29 @@ Individual *populationSelection(Population *pop) {
 
 		int mid = lo + (hi - lo) / 2;
 		if (r < individualGetQualityCumulation(pop->tableInd[mid])) {
-		
-			if (r > individualGetQualityCumulation(pop->tableInd[mid-1]))
+
+			if (mid == 0){
+				return (pop->tableInd[mid]);
+			}
+			if (r >= individualGetQualityCumulation(pop->tableInd[mid-1]))
 				return (pop->tableInd[mid]);
 			else
 				hi = mid - 1;
 		}
-		if (r > individualGetQualityCumulation(pop->tableInd[mid])) {
+		else if (r >= individualGetQualityCumulation(pop->tableInd[mid])) {
+
+			if (mid == pop->size){
+				return (pop->tableInd[mid]);
+			}
 
 			if (r < individualGetQualityCumulation(pop->tableInd[mid+1]))
 				return (pop->tableInd[mid+1]);
 			else
 				lo = mid + 1;
 		}
-		else {
-			return (pop->tableInd[mid]);
-		}
+		// else {
+		// 	return (pop->tableInd[mid]);
+		// }
 	}
 
 	return NULL;
