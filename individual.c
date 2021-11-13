@@ -229,7 +229,7 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 	}
 
 
-
+//
 
 
 	for ( ; p1 <= p2; p1++)
