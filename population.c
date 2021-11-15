@@ -321,7 +321,6 @@ void populationEvolve(Population *pop) {
 		free(table_fitness[i]);
 
 
-
 	free(table_fitness);
 	
 
