@@ -1,19 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "population.h"
-// #include "individual.c"
-
-//double individualGetQuality(Individual *ind);
-//double individualGetQualityCumulation(Individual *ind);
-//int *individualGetGenotype(Individual *ind);
-//void individualPutQuality(Individual *ind, double value);
-//void individualPutQualityCumulation(Individual *ind, double value);
-//Individual *individualCopy(Individual *ind);
-
-// int compare ( const void *pa, const void *pb );
-
-//Individual *getpopind(Population *pop, int i);
-
 
 Individual *getpopind(Population *pop, int i);
 
@@ -69,9 +56,7 @@ Population *populationInit(int length, int nbVal, int size,
 		return popInit;
 
 
-
 	Individual **ind = popInit->tableInd;
-	
 
 	for (int i = 0; i < popInit->size; ++i)
 	{
@@ -87,7 +72,6 @@ Population *populationInit(int length, int nbVal, int size,
 
 	double QC = popInit->quality[0]/(popInit->sumFitness);
 	popInit->qualitycumulation[0] = QC;
-
 
 
 	for( int i = 1; i < popInit->size; i++){
@@ -142,18 +126,26 @@ double populationGetAvgFitness(Population *pop) {
 	return (pop->sumFitness/(double) pop->size);
 
 }
-Individual *getpopind(Population *pop, int i){
-	return pop->tableInd[i];
-}
 
 Individual *populationGetBestIndividual(Population *pop) {
-	double maxFitness = populationGetMaxFitness(pop);
-
+	double maxi = pop->quality[0];
+	int indice;
 	for (int i = 0; i < pop->size; ++i)
-		if(pop->quality[i] == maxFitness)
-			return pop->tableInd[i];
+	{
+		double q = pop->quality[i];
+		if(q >= maxi){
+			maxi = q;
+			indice = i;
+		}
 
-	return NULL;
+	}
+
+
+	// for (int i = 0; i < pop->size; ++i)
+	// 	if(pop->quality[i] == maxFitness)
+	// 		return pop->tableInd[i];
+
+	return pop->tableInd[indice];
 
 }
 
@@ -224,9 +216,9 @@ Individual *populationSelection(Population *pop) {
 	const double *a = *(const double **)pa;
 	const double *b = *(const double **)pb;
 	if(a[0] == b[0])
-		return (int) (a[1] - b[1]);
+		return  (a[1] - b[1]);
 	else
-		return (int) (b[0] - a[0]);
+		return  (b[0] - a[0]);
 
 	}
 
@@ -240,26 +232,18 @@ void populationEvolve(Population *pop) {
 	double (*fitness_t)(Individual *, void *) = pop->fitness;
 	void (*mutation_t)(Individual *, float) = pop->mutation;
 
+	double **table_fitness = calloc(size, sizeof(double*));
+	Individual **nextGeneration = calloc(size, sizeof(Individual*));
 
-	Individual** tableInd = pop->tableInd;
-	double **table_fitness = malloc(size * sizeof(double*));
 
 	for ( int i = 0; i < size; i++ ) {
 		table_fitness[i] = malloc(2 * sizeof(double));
-    	// table_fitness[i][0] = individualGetQuality(tableInd[i]);//////////////
     	table_fitness[i][0] = pop->quality[i];
     	table_fitness[i][1] = i;
 
     }
-	// fprintf(stderr, "operation 2 OK\n" );
 
     qsort(table_fitness, size, sizeof table_fitness[0], compare);
-	// fprintf(stderr, "operation 3 OK\n" );
-
-
-	Individual **nextGeneration;
-	nextGeneration = calloc(size, sizeof(Individual*));
-	// fprintf(stderr, "operation 4 OK\n" );
 
 	//conservation de k meilleur ind
 	for(int i = 0; i < eliteSize; i++)
@@ -291,43 +275,25 @@ void populationEvolve(Population *pop) {
 
 	}
 
-	
-
-	// pop->sumFitness = individualGetQuality(tableInd[0]);///////////
-	pop->sumFitness = pop->quality[0];
-
-
-	// individualPutQuality(pop->tableInd[0], fitness_t(pop->tableInd[0], pop->paramFitness));
 	pop->quality[0] = fitness_t(pop->tableInd[0], pop->paramFitness);
-
-
+	pop->sumFitness = pop->quality[0];
 
 	for (int i = 1; i < size; i++)
 	{
 		mutation_t(pop->tableInd[i], pop->pmutation);
-
-		// individualPutQuality(pop->tableInd[i], fitness_t(pop->tableInd[i], pop->paramFitness));
 		pop->quality[i] = fitness_t(pop->tableInd[i], pop->paramFitness);
-
-
-
 		pop->sumFitness += pop->quality[i];
 
 	}
-	// fprintf(stderr, "operation 7 OK\n" );
 
-	// double QC = individualGetQuality(pop->tableInd[0])/(pop->sumFitness);
 	double QC = pop->quality[0]/(pop->sumFitness);
-	// individualPutQualityCumulation(pop->tableInd[0], QC);
+
 	pop->qualitycumulation[0] = QC;
+
 
 	for(int i = 1; i < size; i++){
 
-		// QC += individualGetQuality(pop->tableInd[i])/(pop->sumFitness);
 		QC += pop->quality[i]/(pop->sumFitness);
-
-
-		// individualPutQualityCumulation(pop->tableInd[i], QC);
 		pop->qualitycumulation[i] = QC;
 
 	}
@@ -337,14 +303,125 @@ void populationEvolve(Population *pop) {
 	for (int i = 0; i < size; ++i)
 		free(table_fitness[i]);
 
-
-
 	free(table_fitness);
 	
 
 }
 
-// m = i++
-// m = ++i
-// i++;
-// ++;
+
+
+// void populationEvolve(Population *pop) {
+// 	fprintf(stderr, "operation 1 OK\n" );
+
+// 	int eliteSize = pop->eliteSize;
+// 	int size = pop->size;
+// 	Individual* (*crossover_t)(Individual *, Individual *) = pop->crossover;
+// 	double (*fitness_t)(Individual *, void *) = pop->fitness;
+// 	void (*mutation_t)(Individual *, float) = pop->mutation;
+
+
+//     Population *pop_t =  populationInit(pop->length, pop->nbVal, pop->size,
+//                            fitness_t,
+//                            pop->paramFitness,
+//                            NULL,
+//                            pop->mutation,
+//                            pop->pmutation,
+//                            pop->crossover,
+//                            eliteSize);
+
+// 	fprintf(stderr, "operation 7 OK\n" );
+
+// 	double **table_fitness = malloc(size * sizeof(double*));
+
+// 	for ( int i = 0; i < size; i++ ) {
+// 		table_fitness[i] = malloc(2 * sizeof(double));
+
+//     	table_fitness[i][0] = pop->quality[i];
+//     	table_fitness[i][1] = i;
+
+//     }
+//     qsort(table_fitness, size, sizeof table_fitness[0], compare);
+
+// 	fprintf(stderr, "operation 7 OK\n" );
+    
+//     for(int i = 0; i < eliteSize; i++)
+// 	{
+// 		int indice = (int) table_fitness[i][1];
+
+// 		pop_t->tableInd[i] = individualCopy(pop->tableInd[indice]);
+		
+		
+// 	}
+
+// 	for(int i = eliteSize; i < size; i++)
+// 	{
+// 		Individual *parent1, *parent2;
+		
+// 		do{
+// 			parent1 = populationSelection(pop);
+// 			parent2 = populationSelection(pop);
+		
+// 		} while (parent1 == parent2);
+
+// 		pop_t->tableInd[i] = crossover_t(parent1, parent2);
+// 	}
+
+// 	fprintf(stderr, "operation 7 OK\n");
+
+
+// 	for (int i = 1; i < size; i++)
+// 	{
+// 		mutation_t(pop_t->tableInd[i], pop->pmutation);
+// 	}
+
+
+	
+
+
+// 	// individualPutQuality(pop->tableInd[0], fitness_t(pop->tableInd[0], pop->paramFitness));
+
+
+
+
+// double sumf=0;
+// 	for (int i = 0; i < size; ++i)
+// 	{
+// 		sumf += fitness_t(pop_t->tableInd[i], pop->paramFitness);
+// 	}
+
+// 	pop_t->sumFitness = sumf;
+
+// 	for (int i = 0; i < size; ++i)
+// 	{
+// 		pop_t->quality[i]= fitness_t(pop_t->tableInd[i], pop->paramFitness);
+// 	}
+// 	pop_t->qualitycumulation[0]= fitness_t(pop_t->tableInd[0], pop->paramFitness)/pop_t->sumFitness;
+
+// 	for (int i = 1; i < size; ++i)
+// 	{
+// 		pop_t->qualitycumulation[i]= pop_t->qualitycumulation[i-1] + fitness_t(pop_t->tableInd[i], pop->paramFitness)/pop_t->sumFitness;
+// 	}
+// 	fprintf(stderr, "operation 7 OK\n" );
+
+
+// // Population *tmp  = pop;
+// populationFree(tmp);
+// pop = pop_t;
+
+// 	fprintf(stderr, "operation 70 OK\n" );
+
+// 	for (int i = 0; i < size; ++i)
+// 		free(table_fitness[i]);
+
+
+
+// 	free(table_fitness);
+	
+// 	printf( "operation 70 OK\n" );
+
+
+
+
+
+
+// }
