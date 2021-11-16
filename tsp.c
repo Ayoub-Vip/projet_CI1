@@ -10,11 +10,21 @@
 #include "tsp.h"
 
 // double fitness(Individual* ind, void* map);
-int *individualGetGenotype(Individual *ind);
-double individualGetQuality(Individual *ind);
-
-
+static int *Getgenotype(Individual *ind);
 Individual *populationGetBestIndividual(Population *pop);
+
+static int* Getgenotype(Individual* ind)
+{
+	int length = individualGetLength(ind)
+	int* genotype = malloc(length*sizeof(int));
+	
+	for(int i = 0; i<length ;i++)
+	{
+		genotype[i] = individualGetGene(ind, i);
+	}
+	
+	return genotype;
+}
 
 // Opaque structure of a map. 
 struct Map_t {
@@ -193,5 +203,5 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 		// 	}
 	}
 	
-	return individualGetGenotype(populationGetBestIndividual(pop));
+	return Getgenotype(populationGetBestIndividual(pop));
 }
