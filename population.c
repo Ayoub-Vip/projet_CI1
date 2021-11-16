@@ -229,7 +229,7 @@ static int compare ( const void *pa, const void *pb ) {
 
 
 void populationEvolve(Population *pop) {
-	
+	srand(time(NULL));
 	int eliteSize = pop->eliteSize;
 	int size = pop->size;
 	Individual* (*crossover_t)(Individual *, Individual *) = pop->crossover;
@@ -319,6 +319,7 @@ void populationEvolve(Population *pop) {
 
 	for (int i = 0; i < size; ++i)
 		free(table_fitness[i]);
+
 
 
 	free(table_fitness);
