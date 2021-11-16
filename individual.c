@@ -10,15 +10,12 @@
 double individualGetQuality(Individual *ind);
 double individualGetQualityCumulation(Individual *ind);
 int *individualGetGenotype(Individual *ind);
-void individualPutQuality(Individual *ind, double value);
-void individualPutQualityCumulation(Individual *ind, double value);
 
 struct Individual_t {
 	int length;
 	int nbVal;
 	int *genoType;
-	double quality;
-	double qualityCumulation;
+
 };
 
 
@@ -102,8 +99,7 @@ Individual *individualCopy(Individual *ind) {
 
 	copyIndividual->length = length;
 	copyIndividual->nbVal = ind->nbVal;
-	copyIndividual->quality = ind->quality;
-	copyIndividual->qualityCumulation = ind->qualityCumulation;
+
 
 	return copyIndividual;
 
@@ -208,7 +204,9 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 	do{
 		// srand()
 		p2 = rand()%(length);
-		p1 = rand()%(length-p2);
+		p1 = rand()%(length);
+// fprintf(stderr, "\n|p1, p2 %d, %d|", p1, p2 );
+
 	} while (p1 == p2);
 // fprintf(stderr, "\n|p1, p2 %d, %d|", p1, p2 );
 
@@ -231,9 +229,6 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 // fprintf(stderr, "%d", tabIndex[i] );
 
 // 	}
-
-
-
 
 	for (int i1 = p1 ; i1 <= p2; i1++)
 	{
@@ -260,21 +255,21 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 
 
 
-int *individualGetGenotype(Individual *ind) {
-	return ind->genoType;
-}
+// int *individualGetGenotype(Individual *ind) {
+// 	return ind->genoType;
+// }
 
-double individualGetQuality(Individual *ind){
-	return ind->quality;
-}
+// double individualGetQuality(Individual *ind){
+// 	return ind->quality;
+// }
 
-double individualGetQualityCumulation(Individual *ind){
-	return ind->qualityCumulation;
-}
+// double individualGetQualityCumulation(Individual *ind){
+// 	return ind->qualityCumulation;
+// }
 
-void individualPutQualityCumulation(Individual *ind, double value){
-	ind->qualityCumulation = value;
-}
-void individualPutQuality(Individual *ind, double value){
-	ind->quality = value;
-}
+// void individualPutQualityCumulation(Individual *ind, double value){
+// 	ind->qualityCumulation = value;
+// }
+// void individualPutQuality(Individual *ind, double value){
+// 	ind->quality = value;
+// }
