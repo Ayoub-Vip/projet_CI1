@@ -15,8 +15,8 @@ Individual *populationGetBestIndividual(Population *pop);
 
 static int* Getgenotype(Individual* ind)
 {
-	int length = individualGetLength(ind)
-	int* genotype = malloc(length*sizeof(int));
+	int length = individualGetLength(ind);
+	int *genotype = malloc(length*sizeof(int));
 	
 	for(int i = 0; i<length ;i++)
 	{
@@ -157,30 +157,25 @@ void tspTourToGIF(int *tour, Map *map, const char *filename, int size) {
 
 double tspGetTourLength(int *tour, Map *map) {
 
-	double tourLength;
+	double tourLength = 0;
 	int i = 0;
-/////// 0 -> 198
 	for (; i < map->nbTowns-1; ++i)  {
 		int villeNum = tour[i];
-		tourLength += sqrt( pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2) );
+		int villeNum2 = tour[i+1];
+
+		tourLength += sqrt( pow(map->x[villeNum] - map->x[villeNum2], 2) + pow(map->y[villeNum] - map->y[villeNum2], 2) );
 	}
 
 	tourLength += sqrt( pow(map->x[tour[i]] - map->x[tour[0]], 2) + pow(map->y[tour[i]] - map->y[tour[0]], 2) );
 
 	return tourLength;
 }
-
-
-
 static double fitness_tour(Individual* ind, void* map) {
 
-	int *tour = individualGetGenotype(ind);
+	int *tour = Getgenotype(ind);
 
-	return (double)1.00/tspGetTourLength((int*) tour,(Map*) map);
+	return 1.00/tspGetTourLength((int*) tour,(Map*) map);
 }
-
-
-
 int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
 	
 	int nbTowns = map->nbTowns;
@@ -198,9 +193,10 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 		printf("\npopulationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
 
 		
-		fprintf(stderr, "(best distance %f)\n\n", 1.00/fitness_tour(populationGetBestIndividual(pop), map));	
-		// if(verbose == 1){
-		// 	}
+		if(verbose == 1){
+			fprintf(stderr, "(best distance %f)\n\n", 1.00/fitness_tour(populationGetBestIndividual(pop), map));	
+
+			}
 	}
 	
 	return Getgenotype(populationGetBestIndividual(pop));
