@@ -149,8 +149,8 @@ double tspGetTourLength(int *tour, Map *map) {
 
 	double tourLength;
 	int i = 0;
-
-	for (; i < map->nbTowns; ++i)  {
+/////// 0 -> 198
+	for (; i < map->nbTowns-1; ++i)  {
 		int villeNum = tour[i];
 		tourLength += sqrt( pow(map->x[villeNum] - map->x[villeNum+1], 2) + pow(map->y[villeNum] - map->y[villeNum+1], 2) );
 	}
@@ -162,11 +162,11 @@ double tspGetTourLength(int *tour, Map *map) {
 
 
 
-static double fitness(Individual* ind, void* map) {
+static double fitness_tour(Individual* ind, void* map) {
 
 	int *tour = individualGetGenotype(ind);
 
-	return (double)1/tspGetTourLength((int*) tour,(Map*) map);
+	return (double)1.00/tspGetTourLength((int*) tour,(Map*) map);
 }
 
 
@@ -175,7 +175,7 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 	
 	int nbTowns = map->nbTowns;
 	
-	Population *pop = populationInit( nbTowns, nbTowns, sizePopulation, fitness, map,
+	Population *pop = populationInit( nbTowns, nbTowns, sizePopulation, fitness_tour, map,
 	                   individualRandomPermInit, individualPermMutation,pmutation,
 	                   individualPermCrossOver, eliteSize);
 	
@@ -184,12 +184,11 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 		populationEvolve(pop);
 
 		individualPrint(stderr, populationGetBestIndividual(pop));
-		// individualPrint(stderr, populationGetBestIndividual(pop->tableInd[1]));
-		// individualPrint(stderr, populationGetBestIndividual(pop->tableInd[2]));
-		printf("populationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
+
+		printf("\npopulationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
 
 		
-		fprintf(stderr, "(best quality %f)\n\n", (double) 1.00/individualGetQuality(populationGetBestIndividual(pop)));	
+		fprintf(stderr, "(best distance %f)\n\n", 1.00/fitness_tour(populationGetBestIndividual(pop), map));	
 		// if(verbose == 1){
 		// 	}
 	}
