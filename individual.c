@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+
 #include "individual.h"
 
 
@@ -19,24 +21,7 @@ struct Individual_t {
 	double qualityCumulation;
 };
 
-int *individualGetGenotype(Individual *ind) {
-	return ind->genoType;
-}
 
-double individualGetQuality(Individual *ind){
-	return ind->quality;
-}
-
-double individualGetQualityCumulation(Individual *ind){
-	return ind->qualityCumulation;
-}
-
-void individualPutQualityCumulation(Individual *ind, double value){
-	ind->qualityCumulation = value;
-}
-void individualPutQuality(Individual *ind, double value){
-	ind->quality = value;
-}
 
 Individual *individualCreate(int length, int nbVal) {
 
@@ -178,9 +163,9 @@ Individual *individualSeqCrossOver(Individual *parent1, Individual *parent2) {
 
 
 void individualPermMutation(Individual *ind, float pm) {
-	
-	if ((( (double)rand()/(double)RAND_MAX ) <= pm))
-	{
+	// srand(time(NULL));
+	if (!(( (double)rand()/(double)RAND_MAX ) <= pm))
+		return;
 	int p1, p2;
 	int length = ind->length;
 	
@@ -195,7 +180,7 @@ void individualPermMutation(Individual *ind, float pm) {
 		p2 = a;
 	}
 	
-	while(p1>=p2)
+	while(p1<=p2)
 	{
 		int a = individualGetGene(ind, p1);
 		ind->genoType[p1] = individualGetGene(ind, p2);
@@ -205,42 +190,61 @@ void individualPermMutation(Individual *ind, float pm) {
 		p1++;
 		p2--;
 	}
-	}
 	
-	}
+	
+}
 
 Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 {
+	// srand(time(NULL));
 	Individual *enfant = individualCopy(parent1);
-	int p1 = rand()%individualGetLength(parent1);
-	int p2 = rand()%individualGetLength(parent2);
+	// int p1 = rand()%individualGetLength(parent1);
+	// int p2 = rand()%individualGetLength(parent2);
+	int length = individualGetLength(parent1);
 
-		
+	int p1, p2;
+// fprintf(stderr, "\n|p1, p2 %d, %d|", p1, p2 );
+	
+	do{
+		// srand()
+		p2 = rand()%(length);
+		p1 = rand()%(length-p2);
+	} while (p1 == p2);
+// fprintf(stderr, "\n|p1, p2 %d, %d|", p1, p2 );
+
 	if(p1>p2){
 		int a = p1;
 		p1 = p2;
 		p2 = a;
 	}
 
-	int tabIndex[enfant->length+1]; 
+// fprintf(stderr, "\n|p1, p2 %d, %d|", p1, p2 );
+
+
+	int tabIndex[enfant->length]; 
 
 	for (int i = 0; i < enfant->length; ++i) {
-		tabIndex[ enfant->genoType[i] ] = i;
+		tabIndex[ parent1->genoType[i] ] = i;
 	}
 
+// 	for (int i = 0; i < enfant->length; ++i) {
+// fprintf(stderr, "%d", tabIndex[i] );
 
-//
+// 	}
 
 
-	for ( ; p1 <= p2; p1++)
+
+
+	for (int i1 = p1 ; i1 <= p2; i1++)
 	{
 		
-		int a = individualGetGene(enfant, p1);
-		int b = individualGetGene(parent2, p1);
+		int a = individualGetGene(enfant, i1);
+// fprintf(stderr, "\n|i1 p1, p2 %d, %d, %d|",i1, p1, p2 );
+		int b = individualGetGene(parent2, i1);
 
 
 		individualSetGene(enfant,  tabIndex[b], a);
-		individualSetGene(enfant,  p1, b);
+		individualSetGene(enfant,  i1, b);
 
 
 		int tmp = tabIndex[b];
@@ -253,3 +257,24 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 
 }
 
+
+
+
+int *individualGetGenotype(Individual *ind) {
+	return ind->genoType;
+}
+
+double individualGetQuality(Individual *ind){
+	return ind->quality;
+}
+
+double individualGetQualityCumulation(Individual *ind){
+	return ind->qualityCumulation;
+}
+
+void individualPutQualityCumulation(Individual *ind, double value){
+	ind->qualityCumulation = value;
+}
+void individualPutQuality(Individual *ind, double value){
+	ind->quality = value;
+}
