@@ -15,6 +15,9 @@
 //Individual *getpopind(Population *pop, int i);
 
 
+Individual *getpopind(Population *pop, int i);
+
+
 struct Population_t {
 	int eliteSize;
 	int length;
@@ -28,6 +31,8 @@ struct Population_t {
 	void (*mutation)(Individual *, float);
 	Individual** tableInd;
 	Individual* (*crossover)(Individual *, Individual *);
+	double* quality;
+	double* qualitycumulation;
 
 };
 
@@ -45,6 +50,8 @@ Population *populationInit(int length, int nbVal, int size,
 
 	Population *popInit;
 	popInit = malloc(sizeof(Population));
+	popInit->quality = malloc(size*sizeof(double));
+	popInit->qualitycumulation = malloc(size*sizeof(double));
 	popInit->tableInd = calloc(size, sizeof(Individual *));
 	popInit->paramFitness  = paramFitness;	
 	popInit->eliteSize = eliteSize;
@@ -56,7 +63,7 @@ Population *populationInit(int length, int nbVal, int size,
 	popInit->nbVal = nbVal;
 	popInit->size = size;
 	popInit->init = init;
-	popInit->sumFitness = 0; //initialement
+	popInit->sumFitness = 0;
 
 	if (init == NULL)
 		return popInit;
@@ -71,23 +78,22 @@ Population *populationInit(int length, int nbVal, int size,
 		if((ind[i] = individualCreate(length, nbVal)) != NULL)
 		{
 			init(ind[i]);
-			individualPutQuality(ind[i], fitness(ind[i], paramFitness));
-			popInit->sumFitness += individualGetQuality(ind[i]);
+			popInit->quality[i] = fitness(ind[i],paramFitness);
+			popInit->sumFitness += popInit->quality[i];
 		}
 	}
 
 
 
-	double QC = individualGetQuality(ind[0])/(popInit->sumFitness);
-	individualPutQualityCumulation(ind[0], QC);
+	double QC = popInit->quality[0]/(popInit->sumFitness);
+	popInit->qualitycumulation[0] = QC;
 
 
 
 	for( int i = 1; i < popInit->size; i++){
 
-		QC += individualGetQuality(ind[i])/(popInit->sumFitness);
-
-		individualPutQualityCumulation(ind[i], QC);
+		QC += popInit->quality[i]/popInit->sumFitness;
+		popInit->qualitycumulation[i] = QC;
 
 	}
 
@@ -99,11 +105,11 @@ Population *populationInit(int length, int nbVal, int size,
 
 double populationGetMaxFitness(Population *pop) {
 
-	double max = individualGetQuality(pop->tableInd[0]);
+	double max = popInit->quality[0];
 
 	for (int i = 1; i < pop->size; ++i)
 	{
-		double q =individualGetQuality(pop->tableInd[i]);
+		double q = popInit->quality[i]);
 
 		max = (q > max) ? q : max;
 	}
@@ -116,11 +122,11 @@ double populationGetMaxFitness(Population *pop) {
 
 double populationGetMinFitness(Population *pop) {
 
-	double min = individualGetQuality(pop->tableInd[0]);
+	double min = pop->quality[0];
 
 	for (int i = 1; i < pop->size; ++i)
 	{
-		double q =individualGetQuality(pop->tableInd[i]);
+		double q = pop->quality[i];
 
 		min = (q < min) ? q : min;
 	}
@@ -144,7 +150,7 @@ Individual *populationGetBestIndividual(Population *pop) {
 	double maxFitness = populationGetMaxFitness(pop);
 
 	for (int i = 0; i < pop->size; ++i)
-		if(individualGetQuality(pop->tableInd[i]) == maxFitness)
+		if(pop->quality[i] == maxFitness)
 			return pop->tableInd[i];
 
 	return NULL;
@@ -183,12 +189,12 @@ Individual *populationSelection(Population *pop) {
 	while (lo < hi) {
 
 		int mid = lo + (hi - lo) / 2;
-		if (r < individualGetQualityCumulation(pop->tableInd[mid])) {
+		if (r < pop->qualitycumulation[mid]) {
 
 			if (mid == 0){
 				return (pop->tableInd[mid]);
 			}
-			if (r >= individualGetQualityCumulation(pop->tableInd[mid-1]))
+			if (r >= pop->qualitycumulation[mid-1])
 				return (pop->tableInd[mid]);
 			else
 				hi = mid - 1;
@@ -199,7 +205,7 @@ Individual *populationSelection(Population *pop) {
 			// 	return (pop->tableInd[mid]);
 			// }
 
-			if (r < individualGetQualityCumulation(pop->tableInd[mid+1]))
+			if (r < pop->qualitycumulation[mid+1])
 				return (pop->tableInd[mid+1]);
 			else
 				lo = mid + 1;
@@ -214,7 +220,7 @@ Individual *populationSelection(Population *pop) {
 
 }
 
-static int compare ( const void *pa, const void *pb ) {
+   static int compare ( const void *pa, const void *pb ) {
 	const double *a = *(const double **)pa;
 	const double *b = *(const double **)pb;
 	if(a[0] == b[0])
@@ -223,8 +229,6 @@ static int compare ( const void *pa, const void *pb ) {
 		return (int) (b[0] - a[0]);
 
 	}
-
-
 
 
 void populationEvolve(Population *pop) {
