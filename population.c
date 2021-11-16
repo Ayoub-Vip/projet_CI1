@@ -105,11 +105,11 @@ Population *populationInit(int length, int nbVal, int size,
 
 double populationGetMaxFitness(Population *pop) {
 
-	double max = popInit->quality[0];
+	double max = pop->quality[0];
 
 	for (int i = 1; i < pop->size; ++i)
 	{
-		double q = popInit->quality[i]);
+		double q = pop->quality[i];
 
 		max = (q > max) ? q : max;
 	}
@@ -231,6 +231,7 @@ Individual *populationSelection(Population *pop) {
 	}
 
 
+
 void populationEvolve(Population *pop) {
 	
 	int eliteSize = pop->eliteSize;
@@ -246,7 +247,7 @@ void populationEvolve(Population *pop) {
 	for ( int i = 0; i < size; i++ ) {
 		table_fitness[i] = malloc(2 * sizeof(double));
     	// table_fitness[i][0] = individualGetQuality(tableInd[i]);//////////////
-    	table_fitness[i][0] = pop->quality;
+    	table_fitness[i][0] = pop->quality[i];
     	table_fitness[i][1] = i;
 
     }
@@ -318,7 +319,7 @@ void populationEvolve(Population *pop) {
 	// double QC = individualGetQuality(pop->tableInd[0])/(pop->sumFitness);
 	double QC = pop->quality[0]/(pop->sumFitness);
 	// individualPutQualityCumulation(pop->tableInd[0], QC);
-	pop->qualityCumulation[0] = QC;
+	pop->qualitycumulation[0] = QC;
 
 	for(int i = 1; i < size; i++){
 
@@ -327,7 +328,7 @@ void populationEvolve(Population *pop) {
 
 
 		// individualPutQualityCumulation(pop->tableInd[i], QC);
-		pop->qualityCumulation[i] = QC;
+		pop->qualitycumulation[i] = QC;
 
 	}
 
