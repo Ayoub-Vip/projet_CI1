@@ -153,14 +153,7 @@ Individual *populationGetBestIndividual(Population *pop) {
 void populationFree(Population *pop) {
 
 	for (int i = 0; i < pop->size; ++i)
-		free(pop->tableInd[i]);
-
-	free(pop->tableInd);
-	// free(pop->crossover);
-	// free(pop->mutation);
-	free(pop->paramFitness);
-	// free(pop->fitness);
-	// free(pop->init);
+		individualFree(pop->tableInd[i]);
 
 	free(pop);
 
@@ -202,36 +195,45 @@ Individual *populationSelection(Population *pop) {
 			else
 				lo = mid + 1;
 		}
-		// else {
-		// 	return (pop->tableInd[mid]);
-		// }d
-		 // if (r >= individualGetQualityCumulation(pop->tableInd[mid]))
+		
 	}
 
 	return NULL;
 
 }
 
-   static int compare ( const void *pa, const void *pb ) {
+
+
+// static int compare ( const void *pa, const void *pb ) {
+// 	const double *a = *(const double **)pa;
+// 	const double *b = *(const double **)pb;
+// 	if(a[0] == b[0])
+// 		return  (a[1] - b[1]);
+// 	else
+// 		return  (1073741824*b[0] - 1073741824*a[0]);
+
+// 	}
+
+
+
+static int compare ( const void *pa, const void *pb ) {
 	const double *a = *(const double **)pa;
 	const double *b = *(const double **)pb;
-	if(a[0] == b[0])
-		return  (a[1] - b[1]);
+	if(a[0] < b[0])
+		return  1;
+	else if (a[0] > b[0])
+		return -1;
 	else
-		return  (b[0] - a[0]);
+		return 0;
+	
 
 	}
-
 
 
 void populationEvolve(Population *pop) {
 	
 	int eliteSize = pop->eliteSize;
 	int size = pop->size;
-	Individual* (*crossover_t)(Individual *, Individual *) = pop->crossover;
-	double (*fitness_t)(Individual *, void *) = pop->fitness;
-	void (*mutation_t)(Individual *, float) = pop->mutation;
-
 	double **table_fitness = calloc(size, sizeof(double*));
 	Individual **nextGeneration = calloc(size, sizeof(Individual*));
 
@@ -243,9 +245,25 @@ void populationEvolve(Population *pop) {
 
     }
 
-    qsort(table_fitness, size, sizeof table_fitness[0], compare);
+    // for (int i = 0; i < size; ++i)
+    // {
+    // 	// int indice = (int) table_fitness[i][1];
 
-	//conservation de k meilleur ind
+    // 	fprintf(stderr,"\nvaleur fitness avant%f\n", table_fitness[i][0]);
+
+    	individualPrint(stderr, pop->tableInd[0]);
+    // }
+
+    // qsort(table_fitness, size, sizeof table_fitness[0], compare);
+
+//     for (int i = 0; i < size; ++i)
+//     {
+//     	fprintf(stderr,"\nvaleur fitness apres%f\n", table_fitness[i][0]);
+//     	int indice = (int) table_fitness[i][1];
+//     	individualPrint(stderr, pop->tableInd[indice]);
+//     }
+// printf("\nfn\n");
+	//Conservation de k meilleur ind
 	for(int i = 0; i < eliteSize; i++)
 	{
 		int indice = (int) table_fitness[i][1];
@@ -255,6 +273,7 @@ void populationEvolve(Population *pop) {
 		
 	}
 
+	//Selection des parents
 	for(int i = eliteSize; i < size; i++)
 	{
 		Individual *parent1, *parent2;
@@ -265,7 +284,7 @@ void populationEvolve(Population *pop) {
 		
 		} while (parent1 == parent2);
 
-		nextGeneration[i] = crossover_t(parent1, parent2);
+		nextGeneration[i] = pop->crossover(parent1, parent2);
 	}
 
 
@@ -275,13 +294,13 @@ void populationEvolve(Population *pop) {
 
 	}
 
-	pop->quality[0] = fitness_t(pop->tableInd[0], pop->paramFitness);
+	pop->quality[0] = pop->fitness(pop->tableInd[0], pop->paramFitness);
 	pop->sumFitness = pop->quality[0];
 
 	for (int i = 1; i < size; i++)
 	{
-		mutation_t(pop->tableInd[i], pop->pmutation);
-		pop->quality[i] = fitness_t(pop->tableInd[i], pop->paramFitness);
+		pop->mutation(pop->tableInd[i], pop->pmutation);
+		pop->quality[i] = pop->fitness(pop->tableInd[i], pop->paramFitness);
 		pop->sumFitness += pop->quality[i];
 
 	}
@@ -298,7 +317,6 @@ void populationEvolve(Population *pop) {
 
 	}
 
-	// fprintf(stderr, "last operation  OK\n" );
 
 	for (int i = 0; i < size; ++i)
 		free(table_fitness[i]);
