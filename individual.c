@@ -210,7 +210,6 @@ Individual *individualPermCrossOver(Individual *parent1, Individual *parent2)
 		tabIndex[b] = tabIndex[a];
 		tabIndex[a] = tmp;
 
-
 	}
 	return enfant;
 
