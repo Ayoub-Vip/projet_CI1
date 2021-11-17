@@ -11,20 +11,7 @@
 
 // double fitness(Individual* ind, void* map);
 static int *Getgenotype(Individual *ind);
-Individual *populationGetBestIndividual(Population *pop);
 
-static int* Getgenotype(Individual* ind)
-{
-	int length = individualGetLength(ind);
-	int *genotype = malloc(length*sizeof(int));
-	
-	for(int i = 0; i<length ;i++)
-	{
-		genotype[i] = individualGetGene(ind, i);
-	}
-	
-	return genotype;
-}
 
 // Opaque structure of a map. 
 struct Map_t {
@@ -170,12 +157,30 @@ double tspGetTourLength(int *tour, Map *map) {
 
 	return tourLength;
 }
+
+
+static int* Getgenotype(Individual* ind) {
+
+	int length = individualGetLength(ind);
+	int *genotype = malloc(length*sizeof(int));
+	
+	for(int i = 0; i<length ;i++)
+
+		genotype[i] = individualGetGene(ind, i);
+	
+	return genotype;
+}
+
+
+
 static double fitness_tour(Individual* ind, void* map) {
 
 	int *tour = Getgenotype(ind);
 
 	return 1.00/tspGetTourLength((int*) tour,(Map*) map);
 }
+
+
 int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSize, float pmutation, int verbose) {
 	
 	int nbTowns = map->nbTowns;
@@ -188,15 +193,23 @@ int *tspOptimizeByGA(Map *map, int nbIterations, int sizePopulation, int eliteSi
 	{
 		populationEvolve(pop);
 
-		individualPrint(stderr, populationGetBestIndividual(pop));
 
-		printf("\npopulationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
 
 		
 		if(verbose == 1){
-			fprintf(stderr, "(best distance %f)\n\n", 1.00/fitness_tour(populationGetBestIndividual(pop), map));	
+
+			individualPrint(stderr, populationGetBestIndividual(pop));
+			printf("\npopulationGetAvgFitness:%f\n", populationGetAvgFitness(pop));
+			fprintf(stderr, "(best distance %f)\n\n", 1.00/fitness_tour(populationGetBestIndividual(pop), map));
 
 			}
+	}
+	if (verbose == 1)
+	{
+		FILE *fp;
+		fp = fopen("tour.txt", "w");
+		individualPrint(fp, populationGetBestIndividual(pop));
+		fclose(fp);
 	}
 	
 	return Getgenotype(populationGetBestIndividual(pop));
